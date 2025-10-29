@@ -124,3 +124,14 @@ def delete_task(db, task_id: str, user_id: str):
 
 def toggle_task_complete(db, task_id: str, user_id: str, completed: bool):
     return update_task(db, task_id, user_id, {"completed": bool(completed)})
+
+# ---------------- Dashboard: Top 3 Upcoming Tasks ----------------
+def get_top_tasks_for_user(db, user_id: str, limit: int = 3):
+    """Return top upcoming / prioritized tasks for dashboard."""
+    cursor = (
+        db.tasks.find({"user_id": str(user_id), "completed": False})
+        .sort([("deadline", 1), ("priority", -1)])
+        .limit(limit)
+    )
+    tasks = [_serialize_task(doc) for doc in cursor]
+    return tasks

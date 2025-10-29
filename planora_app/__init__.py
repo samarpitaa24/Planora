@@ -1,5 +1,6 @@
 from flask import Flask
 
+
 def create_app():
     app = Flask(__name__)
     app.secret_key = "dummy_key_for_testing"
@@ -32,5 +33,12 @@ def create_app():
     
     from planora_app.preferences.preferences_routes import preferences_bp
     app.register_blueprint(preferences_bp)
+    
+    # Import and register auth blueprint
+    from planora_app.auth.routes import auth
+    app.register_blueprint(auth)
+
+    from planora_app.onboarding.routes import onboarding_bp
+    app.register_blueprint(onboarding_bp)
     
     return app

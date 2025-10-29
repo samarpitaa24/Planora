@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Planora - Setup Your Profile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .onboarding-container {
+            background: white;
+            border-radius: 20px;
+            max-width: 800px;
+            width: 100%;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #667eea;
+            font-size: 2.2em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            margin-bottom: 50px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.4s ease;
+        }
+
+        .progress-dots {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background: #667eea;
+            transform: scale(1.3);
+        }
+
+        .progress-dot.completed {
+            background: #764ba2;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-danger {
+            background-color: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .alert-success {
+            background-color: #efe;
+            color: #3c3;
+            border-left: 4px solid #3c3;
+        }
+
+        /* Step Container */
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question-container {
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .question-title {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .question-label {
+            font-size: 1em;
+            color: #555;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        /* Input Styles */
+        .input-container {
+            max-width: 500px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 1.1em;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+            text-align: center;
+        }
+
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Checkbox Grid */
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .checkbox-card {
+            position: relative;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f9f9f9;
+            text-align: center;
+        }
+
+        .checkbox-card:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateY(-2px);
+        }
+
+        .checkbox-card input[type="checkbox"] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        .checkbox-card input[type="checkbox"]:checked ~ .card-content {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .checkbox-card input[type="checkbox"]:checked + .checkmark {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .checkbox-card input[type="checkbox"]:checked + .checkmark::after {
+            display: block;
+        }
+
+        .checkmark {
+            width: 24px;
+            height: 24px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            margin: 0 auto 10px;
+            position: relative;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .checkmark::after {
+            content: '';
+            position: absolute;
+            display: none;
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 12px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        .card-content {
+            font-size: 1em;
+            color: #555;
+            transition: all 0.3s ease;
+        }
+
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+        }
+
+        .btn-back {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-back:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-next,
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-next:hover,
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .onboarding-container {
+                padding: 30px 20px;
+            }
+
+            .question-title {
+                font-size: 1.4em;
+            }
+
+            .checkbox-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="onboarding-container">
+        <div class="header">
+            <h1>Plannora</h1>
+            <p>Help us to know you better</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-dots" id="progressDots"></div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div class="alert alert-danger" id="errorAlert"></div>
+
+
+        <form method="POST" action="{{ url_for('onboarding.onboarding') }}" id="onboardingForm">
+
+            <!-- Step 1: Age -->
+            <div class="step active" data-step="1">
+                <div class="question-container">
+                    <h2 class="question-title">What's your age?</h2>
+                    <div class="input-container">
+                        <label class="question-label">Age</label>
+                        <input type="number" id="age" name="age" min="18" max="30" placeholder="Enter your age" required>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <div></div>
+                    <button type="button" class="btn btn-next" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Subjects -->
+            <div class="step" data-step="2">
+                <div class="question-container">
+                    <h2 class="question-title">Which subjects do you study?</h2>
+                    <p class="question-label">(Select all that apply)</p>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="subjects" value="Math">
+                            <div class="checkmark"></div>
+                            <div class="card-content">Math</div>
+                        </label>
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="subjects" value="Physics">
+                            <div class="checkmark"></div>
+                            <div class="card-content">Physics</div>
+                        </label>
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="subjects" value="Chemistry">
+                            <div class="checkmark"></div>
+                            <div class="card-content">Chemistry</div>
+                        </label>
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="subjects" value="Biology">
+                            <div class="checkmark"></div>
+                            <div class="card-content">Biology</div>
+                        </label>
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="subjects" value="English">
+                            <div class="checkmark"></div>
+                            <div class="card-content">English</div>
+                        </label>
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="subjects" value="History">
+                            <div class="checkmark"></div>
+                            <div class="card-content">History</div>
+                        </label>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-back" onclick="prevStep()">Back</button>
+                    <button type="button" class="btn btn-next" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Sleep Schedule -->
+            <div class="step" data-step="3">
+                <div class="question-container">
+                    <h2 class="question-title">What's your sleep schedule?</h2>
+                    <div class="input-container">
+                        <select id="sleep_schedule" name="sleep_schedule" required>
+                            <option value="">Select your sleep pattern</option>
+                            <option value="Early bird">Early bird</option>
+                            <option value="Night owl">Night owl</option>
+                            <option value="Flexible">Flexible</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-back" onclick="prevStep()">Back</button>
+                    <button type="button" class="btn btn-next" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Morning/Evening Person -->
+            <div class="step" data-step="4">
+                <div class="question-container">
+                    <h2 class="question-title">When do you study best?</h2>
+                    <div class="input-container">
+                        <select id="morning_evening_person" name="morning_evening_person" required>
+                            <option value="">Select your preference</option>
+                            <option value="Morning">Morning</option>
+                            <option value="Evening">Evening</option>
+                            <option value="Both">Both</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-back" onclick="prevStep()">Back</button>
+                    <button type="button" class="btn btn-next" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Motivation -->
+            <div class="step" data-step="5">
+                <div class="question-container">
+                    <h2 class="question-title">What motivates you to study?</h2>
+                    <div class="input-container">
+                        <select id="motivation" name="motivation" required>
+                            <option value="">Select your motivation</option>
+                            <option value="Grades">Grades</option>
+                            <option value="Knowledge">Knowledge</option>
+                            <option value="Competition">Competition</option>
+                            <option value="Routine">Routine</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-back" onclick="prevStep()">Back</button>
+                    <button type="button" class="btn btn-next" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 6: Difficulties -->
+            <div class="step" data-step="6">
+                <div class="question-container">
+                    <h2 class="question-title">What makes studying difficult for you?</h2>
+                    <p class="question-label">(Select all that apply)</p>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="difficulties" value="Procrastination">
+                            <div class="checkmark"></div>
+                            <div class="card-content">Procrastination</div>
+                        </label>
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="difficulties" value="Distractions">
+                            <div class="checkmark"></div>
+                            <div class="card-content">Distractions</div>
+                        </label>
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="difficulties" value="Lack of interest">
+                            <div class="checkmark"></div>
+                            <div class="card-content">Lack of interest</div>
+                        </label>
+                        <label class="checkbox-card">
+                            <input type="checkbox" name="difficulties" value="Fatigue">
+                            <div class="checkmark"></div>
+                            <div class="card-content">Fatigue</div>
+                        </label>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-back" onclick="prevStep()">Back</button>
+                    <button type="submit" class="btn btn-submit">COMPLETE SETUP</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    <script>
+        let currentStep = 1;
+const totalSteps = 6;
+
+// Update progress bar text
+function updateProgress() {
+    document.querySelectorAll(".step-indicator").forEach(indicator => {
+        const step = parseInt(indicator.getAttribute("data-step"));
+        indicator.classList.toggle("active", step === currentStep);
+        indicator.classList.toggle("completed", step < currentStep);
+    });
+
+    const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+    document.querySelector(".progress-bar-full").style.width = progressPercentage + "%";
+}
+
+// Show error message temporarily
+function showError(message) {
+    const errorBox = document.getElementById("errorBox");
+    errorBox.innerText = message;
+    errorBox.style.display = "block";
+    setTimeout(() => errorBox.style.display = "none", 2500);
+}
+
+// Validation per step
+function validateStep() {
+    if (currentStep === 1) {
+        const age = document.getElementById("age").value;
+        if (!age || age < 18 || age > 30) {
+            showError("Age must be between 18 and 30");
+            return false;
+        }
+    }
+
+    if (currentStep === 2) {
+        const subjects = document.querySelectorAll('input[name="subjects"]:checked');
+        if (subjects.length === 0) {
+            showError("Please select at least one subject");
+            return false;
+        }
+    }
+
+    if (currentStep === 3) {
+        const sleepSchedule = document.getElementById("sleep_schedule").value;
+        if (!sleepSchedule) {
+            showError("Please select your sleep schedule");
+            return false;
+        }
+    }
+
+    if (currentStep === 4) {
+        const studyTime = document.getElementById("morning_evening_person").value;
+        if (!studyTime) {
+            showError("Please select when you study best");
+            return false;
+        }
+    }
+
+    if (currentStep === 5) {
+        const motivation = document.getElementById("motivation").value;
+        if (!motivation) {
+            showError("Please select your motivation");
+            return false;
+        }
+    }
+
+    if (currentStep === 6) {
+        const difficulties = document.querySelectorAll('input[name="difficulties"]:checked');
+        if (difficulties.length === 0) {
+            showError("Please select at least one difficulty");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Go to next step
+function nextStep() {
+    if (!validateStep()) return;
+
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove("active");
+    currentStep++;
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.add("active");
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Go back to previous step
+function prevStep() {
+    if (currentStep === 1) return;
+
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove("active");
+    currentStep--;
+    document.querySelector(`.step[data-step="${currentStep}"]`).classList.add("active");
+    updateProgress();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+// Submit onboarding
+function submitForm() {
+    if (!validateStep()) return;
+
+    document.getElementById("onboardingForm").submit();
+}
+
+// Initialize on page load
+updateProgress();
+
+    </script>
+</body>
+</html>

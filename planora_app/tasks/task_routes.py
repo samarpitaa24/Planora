@@ -78,3 +78,15 @@ def api_toggle_task(task_id):
         return jsonify({"success": True, "task": task})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
+
+
+
+# ---------------- Dashboard Top Tasks ----------------
+@tasks_bp.route("/api/top", methods=["GET"])
+def api_get_top_tasks():
+    """Return top 3 upcoming or prioritized tasks for dashboard display."""
+    db = get_db()
+    user_id = session.get("user_id") or "68dc37187ffd67372e424594"
+    from .task_services import get_top_tasks_for_user
+    tasks = get_top_tasks_for_user(db, user_id)
+    return jsonify({"success": True, "tasks": tasks})

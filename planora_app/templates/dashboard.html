@@ -1,3 +1,6 @@
+
+
+
 {% extends "base.html" %} {% block title %}Dashboard | Planora{% endblock %} {%
 block content %}
 <link
@@ -12,7 +15,8 @@ block content %}
       <section class="main-area" aria-label="Main dashboard">
         <!-- Welcome -->
         <header class="welcome-block" aria-label="Welcome">
-          <h2 class="welcome-title">Welcome back, Samarpita!</h2>
+          <h2>Welcome to Planora, {{ username }}!</h2>
+
           <p class="welcome-subtitle">
             “Every day is a new opportunity to learn something amazing!”
           </p>
@@ -106,29 +110,10 @@ block content %}
               <h2 class="panel-title">Today's Plan</h2>
             </div>
 
-            <div class="task-timeline" role="list">
-              <div class="task-row" role="listitem">
-                <div class="task-dot" aria-hidden="true"></div>
-                <div class="task-meta">
-                  <strong class="task-name">Task 1: Finish Chapter 3</strong>
-                  <span class="task-deadline">Due: Oct 5, 2025</span>
-                </div>
-              </div>
-              <div class="task-row" role="listitem">
-                <div class="task-dot" aria-hidden="true"></div>
-                <div class="task-meta">
-                  <strong class="task-name">Task 2: Revise Flashcards</strong>
-                  <span class="task-deadline">Due: Oct 7, 2025</span>
-                </div>
-              </div>
-              <div class="task-row" role="listitem">
-                <div class="task-dot" aria-hidden="true"></div>
-                <div class="task-meta">
-                  <strong class="task-name">Task 3: Practice Problems</strong>
-                  <span class="task-deadline">Due: Oct 9, 2025</span>
-                </div>
-              </div>
-            </div>
+            <div class="task-timeline" id="dashboard-task-list" role="list">
+  <div class="task-row"><em>Loading tasks...</em></div>
+</div>
+
           </div>
         </section>
       </section>
@@ -161,5 +146,11 @@ block content %}
 <script src="{{ url_for('static', filename='js/best_time.js') }}"></script>
 <script src="{{ url_for('static', filename='js/priority_focus.js') }}"></script>
 <script src="{{ url_for('static', filename='js/daily_streak.js') }}"></script>
+
+
+
+<script src="{{ url_for('static', filename='js/dashboard_tasks.js') }}"></script>
+
+
 
 {% endblock %}

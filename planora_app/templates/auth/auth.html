@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planora - Login / Sign Up</title>
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}"> -->
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}"> -->
+    <link rel="stylesheet" href="/static/css/auth.css">
+</head>
+<body>
+    <div class="auth-wrapper">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <div class="brand-content">
+                <h1 class="brand-logo">PLANORA</h1>
+                <p class="brand-tagline">Success loves preparation, not procrastination.</p>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <div class="forms-container">
+                
+                <!-- LOGIN FORM -->
+                <div class="form-section active" id="loginForm">
+                    <div class="form-header">
+                        <h2>Welcome Back</h2>
+                        <p>Login to your account</p>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form">
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" required placeholder="you@example.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="password" required placeholder="Enter your password">
+                        </div>
+
+                        <div class="form-options">
+                            <label class="remember-label">
+                                <input type="checkbox" name="remember"> Remember me
+                            </label>
+                            <a href="{{ url_for('auth.forgot_password') }}" class="forgot-password">Forgot password?</a>
+                        </div>
+
+                        <button type="submit" class="btn-primary">LOGIN</button>
+                    </form>
+
+                    <p class="toggle-link">Don't have an account? 
+                        <button type="button" class="toggle-btn" onclick="toggleForms('signup')">Sign up</button>
+                    </p>
+                </div>
+
+                <!-- SIGNUP FORM -->
+                <div class="form-section" id="signupForm">
+                    <div class="form-header">
+                        <h2>Create Account</h2>
+                        <p>Join Planora today</p>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" action="{{ url_for('auth.signup') }}" class="auth-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" name="full_name" required placeholder="John Doe">
+                            </div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" name="username" required placeholder="johndoe">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" name="email" required placeholder="john@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone</label>
+                                <input type="tel" name="phone" required placeholder="+91 12345 67890">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Password</label>
+                                <input type="password" name="password" required placeholder="••••••••">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm Password</label>
+                                <input type="password" name="confirm_password" required placeholder="••••••••">
+                            </div>
+                        </div>
+
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" name="terms" required>
+                                I agree to the <a href="#">Terms & Conditions</a> and <a href="#">Privacy Policy</a>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn-primary">SIGN UP</button>
+                    </form>
+
+                    <p class="toggle-link">Already have an account? 
+                        <button type="button" class="toggle-btn" onclick="toggleForms('login')">Login</button>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleForms(form) {
+            const loginForm = document.getElementById("loginForm");
+            const signupForm = document.getElementById("signupForm");
+
+            if (form === "signup") {
+                loginForm.classList.remove("active");
+                signupForm.classList.add("active");
+            } else {
+                signupForm.classList.remove("active");
+                loginForm.classList.add("active");
+            }
+        }
+    </script>
+</body>
+</html>

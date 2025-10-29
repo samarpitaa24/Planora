@@ -1,10 +1,13 @@
 # dashboard/routes.py
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session
 from . import services
 from planora_app.utils import check_and_update_quota
 import asyncio
+from planora_app.extensions import get_db
+from bson.objectid import ObjectId
 
-dashboard_bp = Blueprint("dashboard", __name__)
+
+dashboard_bp = Blueprint("dashboard", __name__, url_prefix="/dashboard")
 
 # In-memory session store: user_id -> list of messages
 SESSION_CHATS = {}
@@ -12,9 +15,21 @@ SESSION_CHATS = {}
 # Example token cost estimation per message
 TOKENS_PER_MSG = 50
 
-@dashboard_bp.route("/dashboard")
+@dashboard_bp.route("/")
 def dashboard():
+    db = get_db()
+
+    if 'user_id' not in session:
+        return redirect(url_for('auth.login'))
+
+    user = db.users.find_one({'_id': ObjectId(session['user_id'])})
+
+    if not user.get('onboarding_completed', False):
+        return redirect(url_for('onboarding.onboarding'))
+
     return render_template("dashboard.html")
+
+
 
 
 @dashboard_bp.route("/chat", methods=["POST"])
