@@ -1,40 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Planora</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login - Planora</title>
+  <link rel="stylesheet" href="/static/css/auth.css" />
 </head>
+
 <body>
-    <div class="auth-container">
-        <div class="auth-box">
-            <h2>Login to Planora</h2>
-            
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-            
-            <form method="POST" action="{{ url_for('auth.login') }}">
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                
-                <button type="submit" class="btn-primary">Login</button>
-            </form>
-            
-            <p class="auth-link">Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a></p>
-        </div>
+  <div class="auth-wrapper">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="brand-content">
+        <h1 class="brand-logo">PLANORA</h1>
+        <p class="brand-tagline">Success loves preparation, not procrastination.</p>
+      </div>
     </div>
+
+    <!-- Right Panel -->
+    <div class="right-panel">
+      <div class="form-section active" id="loginForm">
+        <div class="form-header">
+          <h2>Welcome Back</h2>
+          <p>Login to continue your journey with Planora</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="you@example.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              required
+              placeholder="Enter your password"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="form-options">
+            <label class="remember-label">
+              <input type="checkbox" name="remember" />
+              Remember me
+            </label>
+        
+              Forgot password?
+            </a>
+          </div>
+
+          <button type="submit" class="btn-primary">Login</button>
+        </form>
+
+        <p class="toggle-link">
+          Don’t have an account?
+          <a href="{{ url_for('auth.signup') }}" class="toggle-btn">Sign Up</a>
+        </p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

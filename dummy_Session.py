@@ -3,10 +3,10 @@ from datetime import datetime, timedelta
 import random
 from planora_app.extensions import get_db
 
-USER_ID = "68dc37187ffd67372e424594"
+USER_ID = "6914d21e49ea9a6e4be9108c"
 
 # Subjects available for Alice
-SUBJECTS = ["Math", "Physics", "English"]
+SUBJECTS = ["Math", "Physics", "Chemistry", "English","Biology"]
 
 # Cycles and timer options
 CYCLE_OPTIONS = [1, 2, 3, 4]

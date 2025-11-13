@@ -5,6 +5,77 @@
   <title>{% block title %}Planora{% endblock %}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/static/css/planora.css" />
+
+{% block extra_css %}{% endblock %}
+    
+    <!-- Add Floating Timer Indicator Styles -->
+    <style>
+        .floating-timer-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            z-index: 9999;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .floating-timer-indicator:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .floating-timer-indicator.active {
+            display: flex;
+        }
+
+        .floating-timer-indicator .timer-icon {
+            font-size: 20px;
+        }
+
+        .floating-timer-indicator .timer-time {
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: 1px;
+        }
+
+        .floating-timer-indicator .timer-status {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .floating-timer-indicator.break-mode {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+        }
+
+        .floating-timer-indicator.paused-mode {
+            background: linear-gradient(135deg, #ffa500 0%, #ff6347 100%);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.85; }
+        }
+
+        @media (max-width: 768px) {
+            .floating-timer-indicator {
+                bottom: 10px;
+                right: 10px;
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+        }
+    </style>
+
 </head>
 <body>
   <!-- Sidebar -->
@@ -21,7 +92,6 @@
         <li><a href="/sessions">Sessions</a></li>
         <li><a href="/tasks">Tasks</a></li>
         <li><a href="/notes">Notes</a></li>
-        <li><a href="/starred">Starred</a></li>
         <li><a href="/challenges">Challenges</a></li>
         <li><a href="/insights">Insights</a></li>
         
@@ -31,40 +101,42 @@
 
     <div class="sidebar-bottom" role="navigation" aria-label="Secondary">
       <a class="btn btn-ghost" href="/settings">Settings</a>
-      <a class="btn btn-accent" href="/logout">Logout</a>
+      <a href="{{ url_for('auth.logout') }}">Logout</a>
+
     </div>
   </div>
 
   <!-- Main -->
   <div class="main">
-    
-
     <!-- Dynamic content -->
     <div class="content">
+
+      
       {% block content %}
       {% endblock %}
     </div>
   </div>
+
+  <!-- FLOATING TIMER INDICATOR - Shows on all pages -->
+    <div id="floatingTimerIndicator" class="floating-timer-indicator" onclick="navigateToTimer()">
+        <div class="timer-icon">⏱️</div>
+        <div>
+            <div class="timer-time" id="floatingTimerTime">20:00</div>
+            <div class="timer-status" id="floatingTimerStatus">Focus Time</div>
+        </div>
+    </div>
+
+    <!-- JavaScript Files -->
+    <!-- Load timer.js FIRST on ALL pages to ensure background timer runs -->
+    <script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+    
+    <!-- Page-specific scripts before main.js -->
+    {% block extra_js_before %}{% endblock %}
+    
+    <!-- Load main.js AFTER timer.js (always loaded) -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Page-specific scripts after main.js -->
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

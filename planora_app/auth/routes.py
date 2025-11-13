@@ -100,3 +100,10 @@ def signup():
         return redirect(url_for('auth.login'))
 
     return render_template('auth/signup.html') # ✅ revert to correct template
+
+@auth.route("/logout")
+def logout():
+    """Logs the user out by clearing the session and redirecting to login."""
+    session.clear()
+    flash("You have been logged out successfully.", "info")
+    return redirect(url_for("auth.login"))

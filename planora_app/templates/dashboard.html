@@ -1,11 +1,8 @@
-
-
-
 {% extends "base.html" %} {% block title %}Dashboard | Planora{% endblock %} {%
 block content %}
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/dashboard.css') }}"
+  href="{{ url_for('static', filename='css/d2.css') }}"
 />
 
 <main class="dashboard-page">
@@ -18,26 +15,20 @@ block content %}
           <h2>Welcome to Planora, {{ username }}!</h2>
 
           <p class="welcome-subtitle">
-            “Every day is a new opportunity to learn something amazing!”
+            "Every day is a new opportunity to learn something amazing!"
           </p>
         </header>
 
         <!-- Quick alerts / cards -->
-        <section class="quick-cards" aria-label="Quick alerts">
+        <section class="quick-cards" aria-label="Quick stats">
           <article class="card card--lavender">
-            <h3 class="card-title">
-              <span class="card-title__icon" aria-hidden="true"></span>
-              Peak Focus Time
-            </h3>
+            <h3 class="card-title">Peak Focus Time</h3>
             <div class="card-main" id="peak-focus-time">Loading...</div>
             <p class="card-sub">Based on your highest productivity scores.</p>
           </article>
 
           <article class="card card--blush">
-            <h3 class="card-title">
-              <span class="card-title__icon" aria-hidden="true"></span>
-              Priority Focus
-            </h3>
+            <h3 class="card-title">Priority Focus</h3>
             <div class="card-main card-main--accent" id="priority-subject">
               Loading...
             </div>
@@ -47,12 +38,9 @@ block content %}
           </article>
 
           <article class="card card--mint">
-            <h3 class="card-title">
-              <span class="card-title__icon" aria-hidden="true"></span>
-              Daily Streak
-            </h3>
+            <h3 class="card-title">Daily Streak</h3>
             <div class="card-main">
-              <span id="daily-streak-count">0 days</span> 
+              <span id="daily-streak-count">0 days</span>
             </div>
             <p class="card-sub">
               Missed: <span id="daily-streak-missed">0</span> day(s) this month
@@ -62,7 +50,7 @@ block content %}
           </article>
         </section>
 
-        <!-- Study tools -->
+        <!-- Study tools - 2 column layout -->
         <section class="study-tools" aria-label="Study tools">
           <!-- Flashcards panel -->
           <div class="flashcard-panel">
@@ -72,34 +60,59 @@ block content %}
 
             <div class="doc-upload">
               <label for="doc-upload" class="upload-label">Upload:</label>
-              <input id="doc-upload" class="upload-input" type="file" />
-              <button class="upload-btn" type="button" aria-label="Upload">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="18"
-                  height="18"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M5 20h14v-2H5v2zm7-16l-6 6h4v6h4v-6h4l-6-6z" />
-                </svg>
+              <input
+                id="doc-upload"
+                class="upload-input"
+                type="file"
+                accept=".pdf,.txt,.docx"
+              />
+              <button class="upload-btn" type="button" aria-label="Upload file">
+                Upload
+              </button>
+              <button
+                class="cancel-btn"
+                type="button"
+                aria-label="Cancel upload"
+                style="display: none"
+              >
+                ✖ Cancel
               </button>
             </div>
 
-            <!-- Flashcard Stage -->
+            <div id="upload-status" class="upload-status"></div>
+
+            <!-- Flashcard display with flip animation -->
             <div class="flashcard-stage">
               <div class="flashcard-card" id="flashcard-card">
-                <p id="flashcard-content"></p>
-                <div
+                <div class="flashcard-inner" id="flashcard-inner">
+                  <div class="flashcard-front" id="flashcard-front">
+                    Click to upload a document
+                  </div>
+                  <div class="flashcard-back" id="flashcard-back">
+                    Your answers will appear here
+                  </div>
+                </div>
+              </div>
+
+              <!-- Navigation arrows below the card -->
+              <div class="flashcard-nav">
+                <button
                   id="flash-left"
-                  class="flash-nav flash-left"
+                  class="flash-nav"
                   aria-label="Previous card"
-                ></div>
-                <div
+                  type="button"
+                >
+                  ←
+                </button>
+                <div id="flash-progress">0 / 0</div>
+                <button
                   id="flash-right"
-                  class="flash-nav flash-right"
+                  class="flash-nav"
                   aria-label="Next card"
-                ></div>
+                  type="button"
+                >
+                  →
+                </button>
               </div>
             </div>
           </div>
@@ -111,9 +124,8 @@ block content %}
             </div>
 
             <div class="task-timeline" id="dashboard-task-list" role="list">
-  <div class="task-row"><em>Loading tasks...</em></div>
-</div>
-
+              <div class="task-row"><em>Loading tasks...</em></div>
+            </div>
           </div>
         </section>
       </section>
@@ -131,26 +143,21 @@ block content %}
             class="chat-input"
             type="text"
             placeholder="Ask me something…"
-            aria-label="Ask me something"
+            aria-label="Ask a question"
           />
-          <button class="chat-send" type="button">Send</button>
+          <button class="chat-send" type="button" aria-label="Send message">💬</button>
         </footer>
       </aside>
     </div>
   </div>
 </main>
 
-<!-- Scripts at end -->
+<!-- Scripts -->
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 <script src="{{ url_for('static', filename='js/flashcards.js') }}"></script>
 <script src="{{ url_for('static', filename='js/best_time.js') }}"></script>
 <script src="{{ url_for('static', filename='js/priority_focus.js') }}"></script>
 <script src="{{ url_for('static', filename='js/daily_streak.js') }}"></script>
-
-
-
 <script src="{{ url_for('static', filename='js/dashboard_tasks.js') }}"></script>
-
-
 
 {% endblock %}

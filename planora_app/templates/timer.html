@@ -12,77 +12,161 @@
 
   <!-- Timer Display -->
   <div class="timer-display">
+    <div class="timer-label" id="timerLabel">Focus Time</div>
     <span id="countdown">20:00</span>
+    <div class="cycle-indicator" id="cycleIndicator">Cycle 0 of 4</div>
   </div>
 
   <!-- Controls -->
   <div class="controls">
-    <button id="startBtn">Start</button>
-    <button id="pauseBtn">Pause</button>
-    <button id="endBtn">End</button>
-    <button id="resetBtn">Reset</button>
+    <button id="startBtn" class="btn-primary">Start</button>
+    <button id="pauseBtn" class="btn-warning" disabled>Pause</button>
+    <button id="resetBtn" class="btn-secondary">Reset</button>
+    <button id="endBtn" class="btn-danger">End Session</button>
   </div>
 
   <!-- Settings -->
   <div class="settings">
-    <label for="subject">Subject:</label>
-    <select id="subject">
-      <option value="">--Select Subject--</option>
-    </select>
+    <div class="setting-row">
+      <label for="subject">📖 Subject:</label>
+      <select id="subject">
+        <option value="">--Select Subject--</option>
+        {% for subj in subjects %}
+        <option value="{{ subj }}">{{ subj }}</option>
+        {% endfor %}
+      </select>
+    </div>
 
-    <label for="totalCycles">No of Cycles:</label>
-    <select id="totalCycles">
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4" selected>4</option>
-    </select>
+    <div class="setting-row">
+      <label for="numCycles">🔁 Number of Cycles:</label>
+      <select id="numCycles">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4" selected>4</option>
+      </select>
+    </div>
 
-    <label for="timerPerCycle">Time per Cycle (mins):</label>
-    <select id="timerPerCycle">
-      <option value="15">15</option>
-      <option value="20" selected>20</option>
-      <option value="25">25</option>
-    </select>
+    <div class="setting-row">
+      <label for="focusTime">⏱️ Time per Cycle (mins):</label>
+      <select id="focusTime">
+        <option value="15">15</option>
+        <option value="20" selected>20</option>
+        <option value="25">25</option>
+        <option value="30">30</option>
+      </select>
+    </div>
 
-    <label for="breakTime">Break Time (mins):</label>
-    <select id="breakTime">
-      <option value="5" selected>5</option>
-      <option value="10">10</option>
-    </select>
+    <div class="setting-row">
+      <label for="breakTime">☕ Break Time (mins):</label>
+      <select id="breakTime">
+        <option value="5" selected>5</option>
+        <option value="10">10</option>
+      </select>
+    </div>
+
+    <div class="settings-info">
+      <p><strong>Session Format:</strong>
+        <span id="sessionFormatText">4 cycles × 20 mins with 5-min breaks</span>
+      </p>
+      <p><strong>Total Time:</strong>
+        <span id="totalTimeText">~95 minutes (80 min focus + 15 min breaks)</span>
+      </p>
+    </div>
   </div>
 
   <!-- Stats -->
   <div class="stats">
-    <p>Cycles Completed: <span id="cyclesCompleted">0</span>/<span id="totalCyclesDisplay">4</span></p>
-    <p>Pause Count: <span id="pauseCount">0</span></p>
-    <p>Status: <span id="sessionStatus">Not Started</span></p>
+    <div class="stat-item">
+      <span class="stat-label">Cycles Completed:</span>
+      <span class="stat-value">
+        <span id="cyclesCompleted">0</span>/<span id="totalCyclesDisplay">4</span>
+      </span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Pause Count:</span>
+      <span class="stat-value" id="pauseCount">0</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Status:</span>
+      <span class="stat-value" id="sessionStatus">Not Started</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Study Time:</span>
+      <span class="stat-value" id="studyTime">0 min</span>
+    </div>
   </div>
 
- <!-- Notes Section -->
-<div class="notes-section">
-  <h3>Session Notes</h3>
 
-  <textarea id="noteText" rows="4" placeholder="Write your notes here..."></textarea>
-  <button id="saveNoteBtn">Save Note</button>
+  <!-- Notes Section -->
+  <div class="notes-section">
+    <h3>📝 Session Notes</h3>
 
-  <div id="noteStatus" style="display:none; margin-top:8px;"></div>
+    <textarea id="noteText" rows="4" placeholder="Write your notes here... (e.g., topics covered, key learnings, doubts)"></textarea>
+    <button id="saveNoteBtn" class="btn-primary">Save Note</button>
 
-  <div id="recentNoteWrapper" style="margin-top:12px;">
-    {% if latest_note %}
-    <div class="recent-note" id="recentNote">
-      <p><strong>Recent Note:</strong> <span id="recentNoteText">{{ latest_note.text }}</span></p>
-      <small id="recentNoteTime">{{ latest_note.created_at.strftime("%Y-%m-%d %H:%M") }}</small>
+    <div id="noteStatus" style="display:none; margin-top:8px;"></div>
+
+    <div id="recentNoteWrapper" style="margin-top:12px;">
+      {% if latest_note %}
+      <div class="recent-note" id="recentNote">
+        <p><strong>Recent Note:</strong> <span id="recentNoteText">{{ latest_note.text }}</span></p>
+        <small id="recentNoteTime">{{ latest_note.created_at.strftime("%Y-%m-%d %H:%M") }}</small>
+      </div>
+      {% else %}
+      <div class="recent-note" id="recentNote" style="display:none;">
+        <p><strong>Recent Note:</strong> <span id="recentNoteText"></span></p>
+        <small id="recentNoteTime"></small>
+      </div>
+      {% endif %}
     </div>
-    {% else %}
-    <!-- placeholder that the JS will populate -->
-    <div class="recent-note" id="recentNote" style="display:none;">
-      <p><strong>Recent Note:</strong> <span id="recentNoteText"></span></p>
-      <small id="recentNoteTime"></small>
+  </div>
+
+</div>
+
+<!-- Modal for Cycle Completion -->
+<div id="cycleModal" class="modal">
+  <div class="modal-content">
+    <h3 id="modalTitle">✅ Focus Cycle Completed!</h3>
+    <p id="modalMessage">Great job! Time for a break.</p>
+    <div class="modal-buttons">
+      <button id="modalOkBtn" class="btn-primary">Start Break</button>
+      <button id="modalSkipBtn" class="btn-secondary">Skip Break</button>
     </div>
-    {% endif %}
   </div>
 </div>
+
+<!-- Modal for Break End -->
+<div id="breakModal" class="modal">
+  <div class="modal-content">
+    <h3>⏰ Break Time Over!</h3>
+    <p>Ready to continue? Click below to start your next focus cycle.</p>
+    <div class="modal-buttons">
+      <button id="breakContinueBtn" class="btn-primary">Continue Studying</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Session Complete -->
+<div id="completeModal" class="modal">
+  <div class="modal-content celebration">
+    <h3>🎉 Session Completed!</h3>
+    <p>Congratulations! You've completed all cycles.</p>
+    <p><strong>Total Study Time:</strong> <span id="finalStudyTime">0 minutes</span></p>
+    <p class="celebration-text">Great work! Keep up the momentum! 💪</p>
+    <div class="modal-buttons">
+      <button id="completeOkBtn" class="btn-primary">Awesome!</button>
+    </div>
+  </div>
+</div>
+
+<!-- Audio element for alarm -->
+<audio id="alarmSound" preload="auto">
+  <source src="{{ url_for('static', filename='sounds/timeraudio.mp3') }}" type="audio/mpeg">
+</audio>
+
+<!-- Hidden input for user_id -->
+<input type="hidden" id="userId" value="{{ user_id }}">
 
 <!-- JS -->
 <script src="{{ url_for('static', filename='js/timer.js') }}"></script>

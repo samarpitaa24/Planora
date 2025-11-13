@@ -1,0 +1,560 @@
+/* ==============================================
+   ONBOARDING CSS - Planora
+   Multi-step form with progress tracking
+   ============================================== */
+
+:root {
+  /* Updated to match brand color palette */
+  --pink-500: #f472b6;
+  --pink-600: #ec4899;
+  --purple-500: #a78bfa;
+  --purple-600: #8b5cf6;
+  --bg: #faf7fc;
+  --surface: #ffffff;
+  --surface-2: #faf6ff;
+  --text-strong: #111827;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --ring: rgba(236, 72, 153, 0.35);
+  --shadow: 0 10px 20px rgba(168, 139, 250, 0.1), 0 4px 8px rgba(236, 72, 153, 0.06);
+  --shadow-hover: 0 16px 32px rgba(168, 139, 250, 0.18), 0 6px 14px rgba(236, 72, 153, 0.1);
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  font-family: "Poppins", "Inter", sans-serif;
+  color: var(--text);
+  background: linear-gradient(135deg, var(--purple-500) 0%, rgba(167, 139, 250, 0.05) 100%);
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ==============================================
+   ONBOARDING CONTAINER
+   ============================================== */
+
+.onboarding-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.onboarding-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.onboarding-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.onboarding-container::-webkit-scrollbar-thumb {
+  background: rgba(167, 139, 250, 0.3);
+  border-radius: 3px;
+}
+
+/* ==============================================
+   HEADER
+   ============================================== */
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+  animation: fadeIn 0.6s ease;
+  flex-shrink: 0;
+}
+
+.header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--purple-600);
+  margin-bottom: 0.5rem;
+}
+
+.header p {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ==============================================
+   PROGRESS BAR
+   ============================================== */
+
+.progress-container {
+  margin-bottom: 2rem;
+  flex-shrink: 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background-color: rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  box-shadow: var(--shadow);
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple-600) 0%, var(--pink-600) 100%);
+  border-radius: 10px;
+  width: 0%;
+  transition: width 0.5s ease;
+}
+
+.progress-dots {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.progress-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.12);
+  transition: all 0.3s ease;
+}
+
+.progress-dot.active {
+  background-color: var(--purple-600);
+  transform: scale(1.2);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.progress-dot.completed {
+  background-color: var(--pink-600);
+}
+
+/* ==============================================
+   ALERT MESSAGES
+   ============================================== */
+
+.alert {
+  display: none;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.9rem;
+  animation: slideDown 0.3s ease;
+}
+
+.alert-danger {
+  background-color: rgba(236, 72, 153, 0.1);
+  color: var(--pink-600);
+  border: 1px solid rgba(236, 72, 153, 0.3);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==============================================
+   FORM & STEPS
+   ============================================== */
+
+#onboardingForm {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.step {
+  display: none;
+  animation: fadeIn 0.4s ease;
+  flex: 1;
+  min-height: 0;
+}
+
+.step.active {
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==============================================
+   QUESTION CONTAINER
+   ============================================== */
+
+.question-container {
+  background-color: var(--surface);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.question-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-strong);
+  margin-bottom: 1.25rem;
+}
+
+.question-label {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 0.6rem;
+  font-size: 0.9rem;
+}
+
+.input-container {
+  margin-bottom: 0.75rem;
+}
+
+/* Input and Select styling */
+input[type="number"],
+input[type="text"],
+select {
+  width: 100%;
+  padding: 0.7rem 0.9rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  color: var(--text);
+  background-color: var(--surface-2);
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus {
+  outline: none;
+  border-color: var(--purple-500);
+  box-shadow: 0 0 0 3px var(--ring);
+  background-color: var(--surface);
+}
+
+input::placeholder {
+  color: var(--muted);
+}
+
+/* ==============================================
+   CHECKBOX GRID
+   ============================================== */
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.checkbox-card {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-card input {
+  display: none;
+}
+
+.checkbox-card .card-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--radius-sm);
+  background-color: var(--surface);
+  transition: all 0.3s ease;
+  font-weight: 500;
+  text-align: center;
+  font-size: 0.9rem;
+  min-height: 70px;
+}
+
+.checkbox-card:hover .card-content {
+  transform: scale(1.02);
+  border-color: var(--purple-500);
+  background-color: var(--surface-2);
+}
+
+.checkbox-card input:checked + .checkmark + .card-content {
+  border-color: var(--purple-600);
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+  color: var(--purple-600);
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1px var(--purple-600);
+}
+
+.checkmark {
+  display: none;
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  background: linear-gradient(135deg, var(--purple-500) 0%, var(--pink-500) 100%);
+  border-radius: 4px;
+  z-index: 10;
+}
+
+.checkmark::after {
+  content: "✓";
+  position: absolute;
+  color: var(--surface);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.65rem;
+  font-weight: bold;
+}
+
+.checkbox-card input:checked + .checkmark {
+  display: block;
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.5);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* ==============================================
+   BUTTONS
+   ============================================== */
+
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 0.7rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  font-family: inherit;
+}
+
+.btn-next,
+.btn-submit {
+  background: linear-gradient(180deg, var(--purple-500) 0%, var(--purple-600) 100%);
+  color: var(--surface);
+  flex: 1;
+}
+
+.btn-next:hover,
+.btn-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
+}
+
+.btn-next:active,
+.btn-submit:active {
+  transform: scale(0.98);
+}
+
+.btn-back {
+  background-color: transparent;
+  color: var(--text);
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  min-width: 100px;
+}
+
+.btn-back:hover {
+  background-color: var(--bg);
+  border-color: var(--purple-500);
+  color: var(--purple-600);
+  transform: translateX(-2px);
+}
+
+/* ==============================================
+   RESPONSIVE - TABLET
+   ============================================== */
+
+@media (max-width: 768px) {
+  .onboarding-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
+  .header p {
+    font-size: 0.85rem;
+  }
+
+  .question-container {
+    padding: 1.25rem;
+  }
+
+  .question-title {
+    font-size: 1.15rem;
+    margin-bottom: 1rem;
+  }
+
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+  }
+
+  .checkbox-card .card-content {
+    padding: 0.85rem;
+    min-height: 60px;
+  }
+
+  .nav-buttons {
+    flex-direction: column-reverse;
+    gap: 0.6rem;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 0.65rem 1.25rem;
+  }
+
+  .btn-back {
+    min-width: auto;
+  }
+
+  .progress-dots {
+    gap: 0.6rem;
+  }
+
+  .progress-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .progress-dot.active {
+    transform: scale(1.15);
+  }
+}
+
+/* ==============================================
+   RESPONSIVE - MOBILE
+   ============================================== */
+
+@media (max-width: 480px) {
+  .onboarding-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .header p {
+    font-size: 0.8rem;
+  }
+
+  .progress-container {
+    margin-bottom: 1.5rem;
+  }
+
+  .question-container {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .question-title {
+    font-size: 1rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .question-label {
+    font-size: 0.8rem;
+    margin-bottom: 0.45rem;
+  }
+
+  input[type="number"],
+  input[type="text"],
+  select {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .checkbox-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .checkbox-card .card-content {
+    padding: 0.7rem;
+    min-height: 55px;
+    font-size: 0.85rem;
+  }
+
+  .nav-buttons {
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  .alert {
+    padding: 0.6rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .progress-dots {
+    gap: 0.5rem;
+  }
+
+  .progress-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .progress-dot.active {
+    transform: scale(1.1);
+  }
+}

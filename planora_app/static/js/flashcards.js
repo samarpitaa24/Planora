@@ -1,103 +1,168 @@
-// static/js/flashcards.js
+/**
+ * Planora Flashcards Script - Enhanced
+ * Features:
+ * - Upload PDF/TXT/DOCX
+ * - Flippable flashcards with smooth 3D animation
+ * - Smooth left/right navigation
+ * - Arrow controls positioned below cards
+ * - Progress tracking
+ */
 
-const uploadInput = document.getElementById("doc-upload");
-const uploadBtn = document.querySelector(".upload-btn");
-const flashcardStage = document.querySelector(".flashcard-stage");
-const flashcardContent = document.getElementById("flashcard-content");
-const flashLeft = document.getElementById("flash-left");
-const flashRight = document.getElementById("flash-right");
+const uploadInput = document.getElementById("doc-upload")
+const uploadBtn = document.querySelector(".upload-btn")
+const cancelBtn = document.querySelector(".cancel-btn")
+const uploadStatus = document.getElementById("upload-status")
 
-let flashcards = [];
-let currentIndex = 0;
+const flashInner = document.getElementById("flashcard-inner")
+const flashFront = document.getElementById("flashcard-front")
+const flashBack = document.getElementById("flashcard-back")
+const flashLeft = document.getElementById("flash-left")
+const flashRight = document.getElementById("flash-right")
+const flashProgress = document.getElementById("flash-progress")
 
-// Default flashcard color palette
-const defaultColors = [
-  "linear-gradient(135deg, #ede9fe, #f7f6ff)", // lavender
-  "linear-gradient(135deg, #fce7f3, #fff7fb)", // blush
-  "linear-gradient(135deg, #eaf8f0, #ffffff)", // mint
-  "linear-gradient(135deg, #ffe5e5, #fff0f0)"  // pinkish
-];
+let flashcards = []
+let currentIndex = 0
+let controller = null
+let isFlipped = false
 
-// Update flashcard display
-function updateFlashcard() {
-  if (flashcards.length === 0) {
-    flashcardContent.textContent = "No flashcards yet. Upload a document to generate.";
-    flashcardStage.style.background = "linear-gradient(135deg, #f0f0f0, #ffffff)";
-    return;
+// Pastel color palette for cards
+const cardColors = [
+  "#FFE5E9", // Pastel pink
+  "#E5F0FF", // Pastel blue
+  "#E5FFE9", // Pastel mint
+  "#FFF5E5", // Pastel peach
+  "#F0E5FF", // Pastel purple
+  "#E5FFF5", // Pastel cyan
+]
+
+uploadBtn?.addEventListener("click", handleUpload)
+cancelBtn?.addEventListener("click", cancelUpload)
+flashInner?.addEventListener("click", flipCard)
+flashLeft?.addEventListener("click", showPrev)
+flashRight?.addEventListener("click", showNext)
+
+function handleUpload() {
+  const file = uploadInput.files[0]
+  if (!file) {
+    alert("Please select a file to upload.")
+    return
   }
 
-  const card = flashcards[currentIndex];
-  // Show content in bold, no numbering
-  flashcardContent.innerHTML = "<strong>" + card.text + "</strong>";
-  flashcardStage.style.background = card.color || defaultColors[currentIndex % defaultColors.length];
+  const formData = new FormData()
+  formData.append("file", file)
+  formData.append("user_id", "6743c9d81d4d9d98ab11487b")
+
+  controller = new AbortController()
+  const signal = controller.signal
+
+  uploadStatus.textContent = "📄 Processing PDF..."
+  cancelBtn.style.display = "inline-block"
+
+  setTimeout(() => {
+    if (uploadStatus.textContent.includes("Processing")) {
+      uploadStatus.textContent = "✨ Generating flashcards..."
+    }
+  }, 2000)
+
+  fetch("/flashcards/upload", {
+    method: "POST",
+    body: formData,
+    signal,
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("Upload failed")
+      return res.json()
+    })
+    .then((data) => {
+      cancelBtn.style.display = "none"
+      if (data.error) {
+        uploadStatus.textContent = `❌ Error: ${data.error}`
+        return
+      }
+      flashcards = data.flashcards
+      currentIndex = 0
+      isFlipped = false
+      if (flashcards.length > 0) {
+        uploadStatus.textContent = ""
+        showCard(currentIndex)
+        updateProgress()
+      } else {
+        uploadStatus.textContent = "No flashcards found in document."
+      }
+    })
+    .catch((err) => {
+      if (err.name === "AbortError") {
+        uploadStatus.textContent = "Upload canceled."
+      } else {
+        uploadStatus.textContent = `❌ Error: ${err.message}`
+      }
+      cancelBtn.style.display = "none"
+    })
 }
 
-// Navigate flashcards
-flashRight.addEventListener("click", () => {
-  if (flashcards.length === 0) return;
-  currentIndex = (currentIndex + 1) % flashcards.length;
-  updateFlashcard();
-});
-
-flashLeft.addEventListener("click", () => {
-  if (flashcards.length === 0) return;
-  currentIndex = (currentIndex - 1 + flashcards.length) % flashcards.length;
-  updateFlashcard();
-});
-
-// Upload file and generate flashcards
-uploadBtn.addEventListener("click", async () => {
-  const file = uploadInput.files[0];
-  if (!file) return alert("Please select a file first.");
-
-  const formData = new FormData();
-  formData.append("file", file);
-  // Temporary hardcoded user_id
-  formData.append("user_id", "68dc37187ffd67372e424594");
-
-  try {
-    const res = await fetch("/flashcards/upload", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      if (!data.flashcards || data.flashcards.length === 0) {
-        alert("No flashcards were generated from this document.");
-        return;
-      }
-
-      // Clean flashcard content: remove any "Flashcard X:" prefix
-      flashcards = data.flashcards.map((fc, index) => {
-        let text = fc.text || "";
-
-        // Remove "Flashcard 1:" or "1." prefixes
-        if (text.includes(":")) {
-          const parts = text.split(":");
-          if (parts[0].trim().toLowerCase().startsWith("flashcard") || /^\d+$/.test(parts[0].trim())) {
-            text = parts.slice(1).join(":").trim();
-          }
-        }
-
-        return {
-          text,
-          color: defaultColors[index % defaultColors.length]
-        };
-      });
-
-      currentIndex = 0;
-      updateFlashcard();
-      alert("Flashcards generated!");
-    } else {
-      alert("Upload failed: " + data.error);
-    }
-  } catch (err) {
-    console.error(err);
-    alert("Upload failed: " + err.message);
+function cancelUpload() {
+  if (controller) {
+    controller.abort()
+    cancelBtn.style.display = "none"
   }
-});
+}
 
-// Initialize empty flashcard stage
-updateFlashcard();
+function showCard(index) {
+  if (!flashcards[index]) return
+
+  const card = flashcards[index]
+  const color = cardColors[index % cardColors.length]
+
+  // Reset flip state when changing cards
+  isFlipped = false
+  flashInner.classList.remove("flipped")
+
+  const flashCard = document.getElementById("flashcard-card")
+  if (flashCard) {
+    flashCard.style.background = color
+  }
+
+  if (card.type === "concept") {
+    flashFront.innerHTML = `<strong>${card.front}</strong>`
+    flashBack.innerHTML = `<p>${card.back}</p>`
+  } else if (card.type === "question") {
+    flashFront.innerHTML = `<strong>Q: ${card.front}</strong>`
+    flashBack.innerHTML = `<p><strong>A:</strong> ${card.back}</p>`
+  } else {
+    flashFront.innerHTML = `<strong>${card.front || "Card"}</strong>`
+    flashBack.innerHTML = `<p>${card.back || ""}</p>`
+  }
+
+  updateProgress()
+  updateNavigation()
+}
+
+function flipCard() {
+  isFlipped = !isFlipped
+  flashInner.classList.toggle("flipped")
+}
+
+function showNext() {
+  if (currentIndex < flashcards.length - 1) {
+    currentIndex++
+    showCard(currentIndex)
+  }
+}
+
+function showPrev() {
+  if (currentIndex > 0) {
+    currentIndex--
+    showCard(currentIndex)
+  }
+}
+
+function updateProgress() {
+  if (flashProgress) {
+    flashProgress.textContent = `${currentIndex + 1} / ${flashcards.length}`
+  }
+}
+
+function updateNavigation() {
+  if (flashLeft) flashLeft.classList.toggle("disabled", currentIndex === 0)
+  if (flashRight) flashRight.classList.toggle("disabled", currentIndex === flashcards.length - 1)
+}

@@ -62,11 +62,9 @@ def _preferred_time_from_qna(user_doc: dict) -> str:
     Try to extract a fallback preferred time string from user doc.
     Looks for 'preferred_time' key first, then qna.morning_evening_person.
     """
-    pref = user_doc.get("preferred_time")
-    if pref:
-        return pref
+
     qna = user_doc.get("qna", {}) or {}
-    me = qna.get("morning_evening_person") or qna.get("sleep_schedule")
+    me =qna.get("morning_evening_person") or qna.get("preferred_time")
     if not me:
         return "Not set"
     me = me.lower()

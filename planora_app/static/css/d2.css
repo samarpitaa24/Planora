@@ -204,12 +204,14 @@
   border-radius: var(--radius);
   background: var(--surface);
   border: 1px solid rgba(168, 139, 250, 0.1);
-  padding: 18px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   box-shadow: var(--shadow);
-  /* Remove overflow: hidden to allow content */
+  /* Match both panels to same height for balanced layout */
+  height: 380px;
+  max-height: 380px;
   overflow: visible;
   transition: all 0.3s ease;
 }
@@ -224,13 +226,15 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-bottom: 12px;
+  padding-bottom: 8px;
   border-bottom: 2px solid rgba(168, 139, 250, 0.1);
+  /* Reduced padding for compact header (≈2cm / 50px) */
+  min-height: 50px;
 }
 
 .panel-title {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 800;
   color: var(--text-strong);
   text-transform: uppercase;
@@ -241,15 +245,17 @@
 .doc-upload {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: #ffffff;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(168, 139, 250, 0.1);
+  /* Compact upload section (≈1cm / 28px height) */
+  min-height: 28px;
 }
 
 .upload-label {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
   white-space: nowrap;
   color: var(--text-strong);
@@ -257,10 +263,10 @@
 
 .upload-input {
   flex: 1;
-  padding: 5px 8px;
+  padding: 4px 6px;
   border: 1px solid rgba(168, 139, 250, 0.2);
   border-radius: 4px;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   background: #ffffff;
   color: var(--text);
   transition: all 0.2s ease;
@@ -274,13 +280,13 @@
 
 .upload-btn,
 .cancel-btn {
-  padding: 5px 10px;
+  padding: 4px 8px;
   background: linear-gradient(135deg, var(--purple-600), var(--pink-600));
   color: white;
   border: none;
   border-radius: 6px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
@@ -297,50 +303,70 @@
 }
 
 .upload-status {
-  padding: 8px 12px;
+  padding: 4px 8px;
   border-radius: 6px;
   background: transparent;
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   border: none;
   animation: slideIn 0.3s ease-out;
   min-height: 0;
 }
 
-/* Flashcard stage - make square with better proportions */
-.flashcard-stage {
+/* Flashcard stage - expanded to fill available space */
+/* .flashcard-stage {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   min-height: 0;
   padding: 0;
-  /* Set minimum height for square card display */
-  min-height: 380px;
-}
+  /* Increased height to match larger card display area */
+  /* height: auto; */
+/* }  */
 
-/* Flashcard with square aspect ratio */
-.flashcard-card {
+
+/* Make the stage use the panel width and reduce horizontal gaps */
+.flashcard-stage {
   width: 100%;
-  /* Use aspect-ratio for square card and increase available space */
-  aspect-ratio: 1 / 1;
-  max-width: 100%;
-  perspective: 1200px;
-  cursor: pointer;
+  padding: 0 8px; /* small side gap inside panel */
+  box-sizing: border-box;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
 }
 
+/* Flashcard with square aspect ratio - larger display */
+.flashcard-card {
+  width: 100%;
+  max-width: none; /* allow full width */
+  height: 280px;
+  perspective: 1200px;
+  position: relative;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
 /* Flashcard inner - no height constraints, allow 3D */
-.flashcard-inner {
+/* .flashcard-inner {
   width: 100%;
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
   transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  border-radius: var(--radius);
+} */
+
+
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.6s ease;
   border-radius: var(--radius);
 }
 
@@ -348,7 +374,7 @@
   transform: rotateY(180deg);
 }
 
-.flashcard-front,
+/* .flashcard-front,
 .flashcard-back {
   position: absolute;
   width: 100%;
@@ -369,18 +395,57 @@
   border: 1px solid rgba(255, 255, 255, 0.4);
   word-wrap: break-word;
   transition: all 0.3s ease;
+} */
+
+
+/* version 2 working  */
+.flashcard-front,
+.flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 235px;
+  border-radius: var(--radius);
+  backface-visibility: hidden;
+  /* display: flex; */
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 22px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+@media (min-width: 1400px) {
+  .flashcard-card {
+    max-width: 900px;
+  }
 }
 
+/* 
 .flashcard-front {
   background: linear-gradient(135deg, var(--purple-100), var(--pink-100));
   color: var(--text-strong);
+} */
+
+.flashcard-front {
+  background: linear-gradient(to bottom right, #fbe9ff, #e8f5ff);
 }
 
-.flashcard-back {
+/* .flashcard-back {
   background: linear-gradient(135deg, var(--mint-100), var(--peach-100));
   color: var(--text-strong);
   transform: rotateY(180deg);
+} */
+
+.flashcard-back {
+  background: linear-gradient(to bottom right, #fff4e1, #e1ffe9);
+  transform: rotateY(180deg);
 }
+/* Flipping state */
+.flashcard-card.is-flipped .flashcard-inner {
+  transform: rotateY(180deg);
+}
+
+
 
 /* Arrow navigation below card */
 .flashcard-nav {
@@ -389,14 +454,14 @@
   justify-content: center;
   gap: 16px;
   width: 100%;
-  padding-top: 8px;
-  /* Added padding-top for spacing from card */
+  padding-top: 0px;
+  /* Reduced padding for compact spacing */
   flex-shrink: 0;
 }
 
 .flash-nav {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -404,7 +469,7 @@
   color: white;
   border-radius: 50%;
   cursor: pointer;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
   font-weight: bold;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   border: none;
@@ -427,14 +492,14 @@
 }
 
 #flash-progress {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--text-strong);
   background: rgba(168, 139, 250, 0.08);
-  padding: 6px 14px;
+  padding: 4px 10px;
   border-radius: 20px;
   border: 1px solid rgba(168, 139, 250, 0.15);
-  min-width: 50px;
+  min-width: 45px;
   text-align: center;
 }
 
@@ -443,8 +508,8 @@
   flex: 1;
   overflow-y: auto;
   padding-right: 6px;
-  /* Remove fixed min-height, let it grow naturally */
-  min-height: 380px;
+  /* Removed min-height to let it flex with panel */
+  min-height: 0;
 }
 
 .task-timeline::-webkit-scrollbar {
@@ -701,11 +766,27 @@
   .card-main {
     font-size: 1.3rem;
   }
-
+/* 
   .flashcard-card {
     max-width: 280px;
     max-height: 250px;
-  }
+  } */
+
+
+/* Let the card expand to the stage width (remove tight max-width) */
+.flashcard-card {
+  width: 100%;
+  max-width: none;          /* allow full expansion */
+  height: 280px;
+  perspective: 1200px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0;               /* stage already gives gutter; remove extra */
+}
+
 
   .flash-nav {
     width: 36px;

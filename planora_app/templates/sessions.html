@@ -12,31 +12,68 @@
   <!-- Filters -->
   <div class="filters">
     <select id="filterType">
-      <option value="">Filter By</option>
-      <option value="date">Date</option>
-      <option value="month">Month</option>
-      <option value="year">Year</option>
-      <option value="subject">Subject</option>
+      <option value="">All Sessions</option>
+      <option value="date">By Date</option>
+      <option value="month">By Month</option>
+      <option value="year">By Year</option>
+      <option value="subject">By Subject</option>
     </select>
 
     <input type="date" id="filterDate" style="display:none" />
     <select id="filterMonth" style="display:none">
-      {% for m in range(1,13) %}
-      <option value="{{m}}">{{m}}</option>
-      {% endfor %}
+      <option value="">Select Month</option>
+      <option value="1">January</option>
+      <option value="2">February</option>
+      <option value="3">March</option>
+      <option value="4">April</option>
+      <option value="5">May</option>
+      <option value="6">June</option>
+      <option value="7">July</option>
+      <option value="8">August</option>
+      <option value="9">September</option>
+      <option value="10">October</option>
+      <option value="11">November</option>
+      <option value="12">December</option>
     </select>
     <select id="filterYear" style="display:none">
+      <option value="">Select Year</option>
       {% for y in range(2023, 2031) %}
-      <option value="{{y}}">{{y}}</option>
+      <option value="{{y}}" {% if y == 2025 %}selected{% endif %}>{{y}}</option>
       {% endfor %}
     </select>
-    <input type="text" id="filterSubject" placeholder="Enter subject" style="display:none" />
+    <input type="text" id="filterSubject" placeholder="Enter subject name" style="display:none" />
 
-    <button id="applyFilter">Apply</button>
+    <button id="applyFilter" class="btn-primary">Apply Filter</button>
+    <button id="clearFilter" class="btn-secondary" style="display:none">Clear Filter</button>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="sessions-summary" id="sessionsSummary" style="display:none;">
+    <div class="summary-item">
+      <span class="summary-label">Total Sessions:</span>
+      <span class="summary-value" id="totalSessions">0</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Total Study Time:</span>
+      <span class="summary-value" id="totalTime">0h</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Total Cycles:</span>
+      <span class="summary-value" id="totalCycles">0</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Completion Rate:</span>
+      <span class="summary-value" id="completionRate">0%</span>
+    </div>
   </div>
 
   <!-- Sessions list -->
-  <ul id="sessionsList"></ul>
+  <div id="sessionsListContainer">
+    <p id="noSessionsMessage" style="display:none; text-align:center; color:#666; padding:20px;">
+      No sessions found. Start a Pomodoro session to see it here!
+    </p>
+    <ul id="sessionsList"></ul>
+  </div>
 </div>
 
 <!-- Inject USER_ID -->
