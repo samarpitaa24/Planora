@@ -41,4 +41,7 @@ def create_app():
     from planora_app.onboarding.routes import onboarding_bp
     app.register_blueprint(onboarding_bp)
     
+    from planora_app.insights.routes import insights_bp
+    app.register_blueprint(insights_bp)
+    
     return app

@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}Insights | Planora{% endblock %}
+
+{% block content %}
+
+<style>
+  .insights-page {
+    padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  .insights-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .insights-header h1 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+  }
+
+  .insights-header p {
+    color: #666;
+    font-size: 1rem;
+  }
+
+  /* Charts Grid - Side by Side */
+  .charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  /* Chart Container */
+  .chart-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    min-height: 500px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .chart-header h2 {
+    font-size: 1.3rem;
+    color: #333;
+    margin: 0;
+  }
+
+  .filter-dropdown {
+    padding: 0.5rem 1rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .filter-dropdown:hover {
+    border-color: #667eea;
+  }
+
+  .filter-dropdown:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .chart-canvas {
+    position: relative;
+    height: 400px;
+  }
+
+  /* Loading State */
+  .loading {
+    text-align: center;
+    padding: 3rem;
+    color: #999;
+  }
+
+  .loading-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  /* Responsive - Stack on Tablet/Mobile */
+  @media (max-width: 1024px) {
+    .charts-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    
+    .chart-section {
+      min-height: 450px;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .insights-page {
+      padding: 1rem;
+    }
+
+    .chart-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .chart-section {
+      padding: 1.5rem;
+      min-height: 400px;
+    }
+
+    .chart-header h2 {
+      font-size: 1.1rem;
+    }
+  }
+</style>
+
+<main class="insights-page">
+  <!-- Header -->
+  <header class="insights-header">
+    <h1>📊 Insights & Analytics</h1>
+    <p>Visualize your study patterns and track your progress</p>
+  </header>
+
+  <!-- Charts Grid - Side by Side -->
+  <section class="charts-grid">
+    
+    <!-- Chart 1: Study Hours by Subject (Bar Graph) -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h2>Study Hours by Subject</h2>
+        <select class="filter-dropdown" id="subject-filter">
+          <option value="day">Last 24 Hours</option>
+          <option value="week">Last 7 Days</option>
+          <option value="month">Last 30 Days</option>
+          <option value="all" selected>All Time</option>
+        </select>
+      </div>
+      <div class="chart-canvas">
+        <canvas id="subject-chart"></canvas>
+      </div>
+      <div id="subject-loading" class="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Loading data...</p>
+      </div>
+    </div>
+
+    <!-- Chart 2: Study Progress Over Time (Line Graph) -->
+    <div class="chart-section">
+      <div class="chart-header">
+        <h2>Study Progress Over Time</h2>
+      </div>
+      <div class="chart-canvas">
+        <canvas id="progress-chart"></canvas>
+      </div>
+      <div id="progress-loading" class="loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Loading data...</p>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- Chart.js Library -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<script>
+  let subjectChart = null;
+  let progressChart = null;
+
+  // Load Hours by Subject Chart
+  async function loadSubjectChart(filterType = 'all') {
+    const canvas = document.getElementById('subject-chart');
+    const loading = document.getElementById('subject-loading');
+
+    // Show loading
+    canvas.style.display = 'none';
+    loading.style.display = 'block';
+
+    try {
+      const response = await fetch(`/insights/api/hours-by-subject?filter_type=${filterType}`);
+      const data = await response.json();
+
+      // Hide loading
+      loading.style.display = 'none';
+      canvas.style.display = 'block';
+
+      // Destroy existing chart
+      if (subjectChart) {
+        subjectChart.destroy();
+      }
+
+      // Create new chart
+      const ctx = canvas.getContext('2d');
+      subjectChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.subjects,
+          datasets: [{
+            label: 'Hours Studied',
+            data: data.hours,
+            backgroundColor: [
+              'rgba(102, 126, 234, 0.8)',
+              'rgba(118, 75, 162, 0.8)',
+              'rgba(17, 153, 142, 0.8)',
+              'rgba(238, 9, 121, 0.8)',
+              'rgba(255, 106, 0, 0.8)',
+              'rgba(56, 239, 125, 0.8)'
+            ],
+            borderColor: [
+              'rgba(102, 126, 234, 1)',
+              'rgba(118, 75, 162, 1)',
+              'rgba(17, 153, 142, 1)',
+              'rgba(238, 9, 121, 1)',
+              'rgba(255, 106, 0, 1)',
+              'rgba(56, 239, 125, 1)'
+            ],
+            borderWidth: 2,
+            borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.parsed.y.toFixed(2) + ' hours';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value + ' hrs';
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              }
+            }
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error loading subject chart:', error);
+      loading.innerHTML = '<p style="color: red;">Failed to load data</p>';
+    }
+  }
+
+  // Load Progress Over Time Chart
+  async function loadProgressChart() {
+    const canvas = document.getElementById('progress-chart');
+    const loading = document.getElementById('progress-loading');
+
+    // Show loading
+    canvas.style.display = 'none';
+    loading.style.display = 'block';
+
+    try {
+      const response = await fetch('/insights/api/progress-over-time');
+      const data = await response.json();
+
+      // Hide loading
+      loading.style.display = 'none';
+      canvas.style.display = 'block';
+
+      // Destroy existing chart
+      if (progressChart) {
+        progressChart.destroy();
+      }
+
+      // Create gradient
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, 'rgba(102, 126, 234, 0.5)');
+      gradient.addColorStop(1, 'rgba(102, 126, 234, 0.05)');
+
+      // Create new chart
+      progressChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: data.dates.map(date => {
+            const d = new Date(date);
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          }),
+          datasets: [{
+            label: 'Hours Studied',
+            data: data.hours,
+            fill: true,
+            backgroundColor: gradient,
+            borderColor: 'rgba(102, 126, 234, 1)',
+            borderWidth: 3,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: 'rgba(102, 126, 234, 1)',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return context.parsed.y.toFixed(2) + ' hours';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value + ' hrs';
+                }
+              }
+            },
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45
+              }
+            }
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error loading progress chart:', error);
+      loading.innerHTML = '<p style="color: red;">Failed to load data</p>';
+    }
+  }
+
+  // Event listener for filter dropdown
+  document.getElementById('subject-filter').addEventListener('change', function(e) {
+    loadSubjectChart(e.target.value);
+  });
+
+  // Initialize on page load
+  window.addEventListener('DOMContentLoaded', function() {
+    loadSubjectChart('all');
+    loadProgressChart();
+  });
+</script>
+
+{% endblock %}

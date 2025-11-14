@@ -117,10 +117,17 @@ function showCard(index) {
   isFlipped = false
   flashInner.classList.remove("flipped")
 
+  // const flashCard = document.getElementById("flashcard-card")
+  // if (flashCard) {
+  //   flashCard.style.background = color
+  // }
+
+
   const flashCard = document.getElementById("flashcard-card")
   if (flashCard) {
-    flashCard.style.background = color
+  flashCard.style.background = "#FFFFFF"  // ✅ string
   }
+
 
   if (card.type === "concept") {
     flashFront.innerHTML = `<strong>${card.front}</strong>`

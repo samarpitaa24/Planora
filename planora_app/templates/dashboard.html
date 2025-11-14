@@ -2,7 +2,7 @@
 block content %}
 <link
   rel="stylesheet"
-  href="{{ url_for('static', filename='css/d2.css') }}"
+  href="{{ url_for('static', filename='css/d3.css') }}"
 />
 
 <main class="dashboard-page">
@@ -12,7 +12,7 @@ block content %}
       <section class="main-area" aria-label="Main dashboard">
         <!-- Welcome -->
         <header class="welcome-block" aria-label="Welcome">
-          <h2>Welcome to Planora, {{ username }}!</h2>
+          <h2>Welcome to Planora {{ username }}!</h2>
 
           <p class="welcome-subtitle">
             "Every day is a new opportunity to learn something amazing!"
@@ -79,7 +79,7 @@ block content %}
               </button>
             </div>
 
-            <div id="upload-status" class="upload-status"></div>
+          <div id="upload-status" class="upload-status"></div>
 
             <!-- Flashcard display with flip animation -->
             <div class="flashcard-stage">
@@ -154,7 +154,7 @@ block content %}
 
 <!-- Scripts -->
 <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
-<script src="{{ url_for('static', filename='js/flashcards.js') }}"></script>
+<script src="{{ url_for('static', filename='js/flashcards_2.js') }}"></script>
 <script src="{{ url_for('static', filename='js/best_time.js') }}"></script>
 <script src="{{ url_for('static', filename='js/priority_focus.js') }}"></script>
 <script src="{{ url_for('static', filename='js/daily_streak.js') }}"></script>

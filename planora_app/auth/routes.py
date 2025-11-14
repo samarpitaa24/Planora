@@ -91,6 +91,8 @@ def signup():
             'phone': phone,
             'password': hashed_password,
             'created_at': datetime.utcnow(),
+            "daily_quota": 10000,      # default quota
+            "tokens_used": 0,          # default usage
             'onboarding_completed': False # ✅ New user should still go through onboarding
         }
 

@@ -190,14 +190,17 @@
 }
 
 /* Study tools - 2 columns - adjusted for scrollable page */
+/* Study tools - 2 columns - adjusted for scrollable page */
 .study-tools {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
   /* Remove flex: 1 and min-height: 0 - let it size naturally */
   animation: slideIn 0.5s ease-out 0.1s both;
+  max-height: 450px;
 }
 
+/* Panels - proper sizing, no scrolling within cards */
 /* Panels - proper sizing, no scrolling within cards */
 .flashcard-panel,
 .task-plan-panel {
@@ -212,6 +215,7 @@
   /* Remove overflow: hidden to allow content */
   overflow: visible;
   transition: all 0.3s ease;
+  max-height: 450px;
 }
 
 .flashcard-panel:hover,
@@ -334,21 +338,36 @@
   min-height: 0;
   padding: 0;
   /* Set minimum height for square card display */
-  min-height: 280px;
+  min-height: 220px;
 }
-
 /* Flashcard with square aspect ratio */
-.flashcard-card {
-  width: 100%;
+/* .flashcard-card { */
+  /* width: 100%;
   /* Use aspect-ratio for square card and increase available space */
-  aspect-ratio: 1 / 1;
+  /* aspect-ratio: 1 / 1;
   max-width: 100%;
   perspective: 1200px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+}  */
+
+
+/* Flashcard with square aspect ratio */
+.flashcard-card {
+  width: 100%;
+  /* Use aspect-ratio for square card and increase available space */
+  aspect-ratio: 1.2 / 1;
+  max-width: 100%;
+  max-height: 250px;
+  perspective: 1200px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 
 /* Flashcard inner - no height constraints, allow 3D */
 .flashcard-inner {
@@ -455,12 +474,13 @@
 }
 
 /* Task timeline - increase height for balance */
+/* Task timeline - increase height for balance */
 .task-timeline {
   flex: 1;
   overflow-y: auto;
   padding-right: 6px;
   /* Remove fixed min-height, let it grow naturally */
-  min-height: 380px;
+  min-height: 220px;
 }
 
 .task-timeline::-webkit-scrollbar {

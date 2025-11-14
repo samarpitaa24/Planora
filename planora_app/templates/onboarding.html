@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to Planora - Setup Your Profile</title>
-    <link
+   <link
   rel="stylesheet"
   href="{{ url_for('static', filename='css/onboarding.css') }}"
 />
@@ -27,7 +27,6 @@
         <!-- Alert Messages -->
         <div class="alert alert-danger" id="errorAlert"></div>
 
-
         <form method="POST" action="{{ url_for('onboarding.onboarding') }}" id="onboardingForm">
 
             <!-- Step 1: Age -->
@@ -45,8 +44,22 @@
                 </div>
             </div>
 
-            <!-- Step 2: Subjects -->
+            <!-- Step 2: Date of Birth -->
             <div class="step" data-step="2">
+                <div class="question-container">
+                    <h2 class="question-title">What's your date of birth?</h2>
+                    <div class="input-container">
+                        <input type="date" id="dob" name="dob" max="{{ max_date }}" required>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-back" onclick="prevStep()">Back</button>
+                    <button type="button" class="btn btn-next" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Subjects -->
+            <div class="step" data-step="3">
                 <div class="question-container">
                     <h2 class="question-title">Which subjects do you study?</h2>
                     <p class="question-label">(Select all that apply)</p>
@@ -89,8 +102,8 @@
                 </div>
             </div>
 
-            <!-- Step 3: Sleep Schedule -->
-            <div class="step" data-step="3">
+            <!-- Step 4: Sleep Schedule -->
+            <div class="step" data-step="4">
                 <div class="question-container">
                     <h2 class="question-title">What's your sleep schedule?</h2>
                     <div class="input-container">
@@ -108,8 +121,8 @@
                 </div>
             </div>
 
-            <!-- Step 4: Morning/Evening Person -->
-            <div class="step" data-step="4">
+            <!-- Step 5: Morning/Evening Person -->
+            <div class="step" data-step="5">
                 <div class="question-container">
                     <h2 class="question-title">When do you study best?</h2>
                     <div class="input-container">
@@ -127,8 +140,8 @@
                 </div>
             </div>
 
-            <!-- Step 5: Motivation -->
-            <div class="step" data-step="5">
+            <!-- Step 6: Motivation -->
+            <div class="step" data-step="6">
                 <div class="question-container">
                     <h2 class="question-title">What motivates you to study?</h2>
                     <div class="input-container">
@@ -147,8 +160,8 @@
                 </div>
             </div>
 
-            <!-- Step 6: Difficulties -->
-            <div class="step" data-step="6">
+            <!-- Step 7: Difficulties -->
+            <div class="step" data-step="7">
                 <div class="question-container">
                     <h2 class="question-title">What makes studying difficult for you?</h2>
                     <p class="question-label">(Select all that apply)</p>
@@ -177,6 +190,31 @@
                 </div>
                 <div class="nav-buttons">
                     <button type="button" class="btn btn-back" onclick="prevStep()">Back</button>
+                    <button type="button" class="btn btn-next" onclick="nextStep()">Next</button>
+                </div>
+            </div>
+
+            <!-- Step 8: Preferred Study Time -->
+            <div class="step" data-step="8">
+                <div class="question-container">
+                    <h2 class="question-title">What's your preferred study time?</h2>
+                    <p class="question-label">Set your ideal study time window (maximum 3 hours)</p>
+                    <div class="input-container">
+                        <div class="time-inputs">
+                            <div class="time-input-group">
+                                <label for="study_start">Start Time:</label>
+                                <input type="time" id="study_start" name="study_start" required>
+                            </div>
+                            <div class="time-input-group">
+                                <label for="study_end">End Time:</label>
+                                <input type="time" id="study_end" name="study_end" required>
+                            </div>
+                        </div>
+                        <div class="duration-info" id="durationInfo">Select times to see duration</div>
+                    </div>
+                </div>
+                <div class="nav-buttons">
+                    <button type="button" class="btn btn-back" onclick="prevStep()">Back</button>
                     <button type="submit" class="btn btn-submit">COMPLETE SETUP</button>
                 </div>
             </div>
@@ -186,113 +224,188 @@
 
     <script>
         let currentStep = 1;
-const totalSteps = 6;
+        const totalSteps = 8;
 
-// Update progress bar text
-function updateProgress() {
-    document.querySelectorAll(".step-indicator").forEach(indicator => {
-        const step = parseInt(indicator.getAttribute("data-step"));
-        indicator.classList.toggle("active", step === currentStep);
-        indicator.classList.toggle("completed", step < currentStep);
-    });
-
-    const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
-    document.querySelector(".progress-bar-full").style.width = progressPercentage + "%";
-}
-
-// Show error message temporarily
-function showError(message) {
-    const errorBox = document.getElementById("errorBox");
-    errorBox.innerText = message;
-    errorBox.style.display = "block";
-    setTimeout(() => errorBox.style.display = "none", 2500);
-}
-
-// Validation per step
-function validateStep() {
-    if (currentStep === 1) {
-        const age = document.getElementById("age").value;
-        if (!age || age < 18 || age > 30) {
-            showError("Age must be between 18 and 30");
-            return false;
+        // Initialize progress dots
+        function initProgressDots() {
+            const dotsContainer = document.getElementById('progressDots');
+            dotsContainer.innerHTML = '';
+            for (let i = 1; i <= totalSteps; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'progress-dot';
+                if (i === 1) dot.classList.add('active');
+                dotsContainer.appendChild(dot);
+            }
         }
-    }
 
-    if (currentStep === 2) {
-        const subjects = document.querySelectorAll('input[name="subjects"]:checked');
-        if (subjects.length === 0) {
-            showError("Please select at least one subject");
-            return false;
+        // Update progress bar
+        function updateProgress() {
+            const progressFill = document.getElementById('progressFill');
+            const dots = document.querySelectorAll('.progress-dot');
+            
+            const progressPercentage = ((currentStep - 1) / (totalSteps - 1)) * 100;
+            progressFill.style.width = progressPercentage + '%';
+            
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    dot.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    dot.classList.add('active');
+                }
+            });
         }
-    }
 
-    if (currentStep === 3) {
-        const sleepSchedule = document.getElementById("sleep_schedule").value;
-        if (!sleepSchedule) {
-            showError("Please select your sleep schedule");
-            return false;
+        // Show error message
+        function showError(message) {
+            const errorAlert = document.getElementById('errorAlert');
+            errorAlert.textContent = message;
+            errorAlert.classList.add('show');
+            setTimeout(() => {
+                errorAlert.classList.remove('show');
+            }, 3000);
         }
-    }
 
-    if (currentStep === 4) {
-        const studyTime = document.getElementById("morning_evening_person").value;
-        if (!studyTime) {
-            showError("Please select when you study best");
-            return false;
+        // Calculate time duration
+        function calculateDuration() {
+            const startInput = document.getElementById('study_start');
+            const endInput = document.getElementById('study_end');
+            const durationInfo = document.getElementById('durationInfo');
+
+            if (startInput.value && endInput.value) {
+                const start = new Date(`1970-01-01T${startInput.value}:00`);
+                let end = new Date(`1970-01-01T${endInput.value}:00`);
+                
+                // Handle cases where end time is past midnight
+                if (end <= start) {
+                    end.setDate(end.getDate() + 1);
+                }
+                
+                const diffMs = end - start;
+                const diffHours = diffMs / (1000 * 60 * 60);
+                const hours = Math.floor(diffHours);
+                const minutes = Math.round((diffHours - hours) * 60);
+                
+                if (diffHours > 3) {
+                    durationInfo.style.color = '#c33';
+                    durationInfo.textContent = `Duration: ${hours}h ${minutes}m (exceeds 3 hour limit)`;
+                } else {
+                    durationInfo.style.color = '#667eea';
+                    durationInfo.textContent = `Duration: ${hours}h ${minutes}m`;
+                }
+            }
         }
-    }
 
-    if (currentStep === 5) {
-        const motivation = document.getElementById("motivation").value;
-        if (!motivation) {
-            showError("Please select your motivation");
-            return false;
+        // Add event listeners for time inputs
+        document.getElementById('study_start')?.addEventListener('change', calculateDuration);
+        document.getElementById('study_end')?.addEventListener('change', calculateDuration);
+
+        // Validation per step
+        function validateStep() {
+            if (currentStep === 1) {
+                const age = document.getElementById('age').value;
+                if (!age || age < 18 || age > 30) {
+                    showError('Age must be between 18 and 30');
+                    return false;
+                }
+            }
+
+            if (currentStep === 2) {
+                const dob = document.getElementById('dob').value;
+                if (!dob) {
+                    showError('Please select your date of birth');
+                    return false;
+                }
+            }
+
+            if (currentStep === 3) {
+                const subjects = document.querySelectorAll('input[name="subjects"]:checked');
+                if (subjects.length === 0) {
+                    showError('Please select at least one subject');
+                    return false;
+                }
+            }
+
+            if (currentStep === 4) {
+                const sleepSchedule = document.getElementById('sleep_schedule').value;
+                if (!sleepSchedule) {
+                    showError('Please select your sleep schedule');
+                    return false;
+                }
+            }
+
+            if (currentStep === 5) {
+                const studyTime = document.getElementById('morning_evening_person').value;
+                if (!studyTime) {
+                    showError('Please select when you study best');
+                    return false;
+                }
+            }
+
+            if (currentStep === 6) {
+                const motivation = document.getElementById('motivation').value;
+                if (!motivation) {
+                    showError('Please select your motivation');
+                    return false;
+                }
+            }
+
+            if (currentStep === 7) {
+                const difficulties = document.querySelectorAll('input[name="difficulties"]:checked');
+                if (difficulties.length === 0) {
+                    showError('Please select at least one difficulty');
+                    return false;
+                }
+            }
+
+            if (currentStep === 8) {
+                const start = document.getElementById('study_start').value;
+                const end = document.getElementById('study_end').value;
+
+                if (!start || !end) {
+                    showError('Please select both start and end times');
+                    return false;
+                }
+
+                const startDt = new Date(`1970-01-01T${start}:00`);
+                let endDt = new Date(`1970-01-01T${end}:00`);
+                if (endDt <= startDt) endDt.setDate(endDt.getDate() + 1);
+
+                const hoursDiff = (endDt - startDt) / (1000 * 60 * 60);
+                if (hoursDiff > 3) {
+                    showError('Preferred study time cannot exceed 3 hours');
+                    return false;
+                }
+            }
+
+            return true;
         }
-    }
 
-    if (currentStep === 6) {
-        const difficulties = document.querySelectorAll('input[name="difficulties"]:checked');
-        if (difficulties.length === 0) {
-            showError("Please select at least one difficulty");
-            return false;
+        // Go to next step
+        function nextStep() {
+            if (!validateStep()) return;
+
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+            currentStep++;
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-    }
 
-    return true;
-}
+        // Go back to previous step
+        function prevStep() {
+            if (currentStep === 1) return;
 
-// Go to next step
-function nextStep() {
-    if (!validateStep()) return;
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove('active');
+            currentStep--;
+            document.querySelector(`.step[data-step="${currentStep}"]`).classList.add('active');
+            updateProgress();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
 
-    document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove("active");
-    currentStep++;
-    document.querySelector(`.step[data-step="${currentStep}"]`).classList.add("active");
-    updateProgress();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-// Go back to previous step
-function prevStep() {
-    if (currentStep === 1) return;
-
-    document.querySelector(`.step[data-step="${currentStep}"]`).classList.remove("active");
-    currentStep--;
-    document.querySelector(`.step[data-step="${currentStep}"]`).classList.add("active");
-    updateProgress();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-// Submit onboarding
-function submitForm() {
-    if (!validateStep()) return;
-
-    document.getElementById("onboardingForm").submit();
-}
-
-// Initialize on page load
-updateProgress();
-
+        // Initialize on page load
+        initProgressDots();
+        updateProgress();
     </script>
 </body>
 </html>
