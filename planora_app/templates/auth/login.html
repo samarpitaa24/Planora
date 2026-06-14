@@ -69,6 +69,20 @@
           </div>
 
           <button type="submit" class="btn-primary">Login</button>
+
+          <div class="oauth-section" aria-label="OAuth sign in options">
+            <div class="oauth-divider"><span>or</span></div>
+
+            <a href="{{ url_for('auth.google_login') }}" class="btn-oauth">
+              <span class="oauth-mark">G</span>
+              Continue with Google
+            </a>
+
+            <a href="{{ url_for('auth.github_login') }}" class="btn-oauth">
+              <span class="oauth-mark">GH</span>
+              Continue with GitHub
+            </a>
+          </div>
         </form>
 
         <p class="toggle-link">
