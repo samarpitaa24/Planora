@@ -16,6 +16,16 @@ document.addEventListener("DOMContentLoaded", () => {
       duration: document.getElementById("task-duration").value || null,
     };
 
+    const deadlineValue = document.getElementById("task-deadline").value;
+    if (deadlineValue) {
+      const selectedDate = new Date(deadlineValue);
+      const now = new Date();
+      if (selectedDate <= now) {
+        alert("Please choose a future deadline.");
+        return;
+      }
+    }
+
     try {
       if (editingId) {
         const res = await fetch(`/tasks/api/${editingId}`, {
@@ -90,7 +100,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const parts = [];
       if (task.deadline) {
         const d = new Date(task.deadline);
-        parts.push(d.toLocaleString());
+        const pad = (n) => String(n).padStart(2, "0");
+        const formattedDate = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+        const formattedTime = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        parts.push(`${formattedDate} ${formattedTime}`);
       }
       if (task.priority) parts.push(task.priority);
       if (task.duration !== undefined && task.duration !== null) parts.push(`${task.duration}h`);
