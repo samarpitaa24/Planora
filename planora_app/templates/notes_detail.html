@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Note Detail - Planora{% endblock %}
+
+{% block content %}
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/notes_detail.css') }}">
+
+<div class="note-detail-container">
+  <!-- Header -->
+  <div class="detail-header">
+    <button class="back-btn" onclick="history.back()">← Back to Notes</button>
+    <h1>Study Notes</h1>
+  </div>
+
+  <!-- Main Content -->
+  <div class="detail-content">
+    <!-- Note Card -->
+    <div class="note-card">
+      <div class="note-meta">
+        <span class="note-date" id="noteDate"></span>
+      </div>
+      
+      <div class="note-text-section">
+        <h2 class="note-title">Your Notes</h2>
+        <div class="note-text-container">
+          <p id="noteText" class="note-text"></p>
+        </div>
+      </div>
+
+      <!-- Summarize Section -->
+      <div class="summarize-section">
+        <button id="summarizeBtn" class="summarize-btn">
+          <span class="btn-icon">✨</span>
+          <span class="btn-text">Generate Summary with AI</span>
+        </button>
+        <p class="btn-hint">Click to get an AI-powered summary of your notes</p>
+      </div>
+    </div>
+
+    <!-- Summary Card (Hidden initially) -->
+    <div class="summary-card" id="summaryCard" style="display: none;">
+      <div class="summary-header">
+        <h2 class="summary-title">📝 AI Summary</h2>
+        <button class="close-summary" onclick="document.getElementById('summaryCard').style.display='none';">×</button>
+      </div>
+      
+      <div class="summary-content" id="summaryContent">
+        <!-- Summary will be inserted here -->
+      </div>
+      
+      <div class="summary-footer">
+        <p class="summary-hint">💡 Use this summary to quickly review your key learning points</p>
+      </div>
+    </div>
+
+    <!-- Loading Spinner (Hidden initially) -->
+    <div class="loading-spinner" id="loadingSpinner" style="display: none;">
+      <div class="spinner"></div>
+      <p>Generating your summary...</p>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript for interactivity -->
+<script>
+  const noteId = new URLSearchParams(window.location.search).get('id');
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!noteId) {
+      alert('No note ID provided');
+      history.back();
+      return;
+    }
+
+    await loadNoteDetail();
+    
+    document.getElementById('summarizeBtn').addEventListener('click', summarizeNote);
+  });
+
+  async function loadNoteDetail() {
+    try {
+      const response = await fetch(`/notes/${noteId}`);
+      const data = await response.json();
+
+      if (!data.success || !data.note) {
+        alert('Note not found');
+        history.back();
+        return;
+      }
+
+      const note = data.note;
+      
+      // Format date in IST
+      const dateObj = new Date(note.created_at);
+      const formattedDate = dateObj.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+
+      document.getElementById('noteDate').textContent = `${formattedDate} IST`;
+      document.getElementById('noteText').textContent = note.text;
+
+      // If summary already exists, display it
+      if (note.summary) {
+        displaySummary(note.summary);
+      }
+    } catch (err) {
+      console.error('Error loading note:', err);
+      alert('Failed to load note');
+      history.back();
+    }
+  }
+
+  async function summarizeNote() {
+    try {
+      const summaryCard = document.getElementById('summaryCard');
+      const spinner = document.getElementById('loadingSpinner');
+      const btn = document.getElementById('summarizeBtn');
+
+      // Show loading
+      spinner.style.display = 'block';
+      btn.disabled = true;
+      btn.style.opacity = '0.6';
+
+      const response = await fetch(`/notes/${noteId}/summarize`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to generate summary');
+      }
+
+      // Hide loading
+      spinner.style.display = 'none';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+
+      displaySummary(data.summary);
+    } catch (err) {
+      console.error('Error summarizing note:', err);
+      document.getElementById('loadingSpinner').style.display = 'none';
+      document.getElementById('summarizeBtn').disabled = false;
+      document.getElementById('summarizeBtn').style.opacity = '1';
+      alert('Failed to generate summary: ' + err.message);
+    }
+  }
+
+  function displaySummary(summary) {
+    const summaryCard = document.getElementById('summaryCard');
+    const summaryContent = document.getElementById('summaryContent');
+
+    // Format summary with markdown-like styling
+    const formattedSummary = summary
+      .replace(/\n/g, '<br>')
+      .replace(/^- /gm, '<li>')
+      .replace(/<li>/g, '<li class="summary-item">')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.*?)__/g, '<em>$1</em>');
+
+    summaryContent.innerHTML = `<div class="summary-text">${formattedSummary}</div>`;
+    summaryCard.style.display = 'block';
+
+    // Smooth scroll to summary
+    setTimeout(() => {
+      summaryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
+  }
+</script>
+
+{% endblock %}
