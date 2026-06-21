@@ -10,8 +10,17 @@ from planora_app.chatbot.services import (
     get_gemini_reply,
     update_conversation_title,
     delete_conversation,
-    toggle_pin
+    toggle_pin,
+    save_chat_document
 )
+
+from planora_app.ai.pdf_utils import (
+    allowed_file,
+    save_pdf,
+    extract_pdf_text,
+    MAX_FILE_SIZE
+)
+
 from bson import ObjectId
 from planora_app.extensions import get_db
 
@@ -147,4 +156,61 @@ def pin_chat(conversation_id):
 
     return jsonify({
         "success": True
+    })
+    
+@chatbot_bp.route("/chatbot/upload-pdf", methods=["POST"])
+def upload_pdf():
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify({"error": "User not logged in"}), 401
+
+    conversation_id = request.form.get("conversation_id")
+
+    if not conversation_id:
+        return jsonify({"error": "Conversation id missing"}), 400
+
+    if "file" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
+    file = request.files["file"]
+
+    if file.filename == "":
+        return jsonify({"error": "No file selected"}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({"error": "Only PDF files are allowed"}), 400
+
+    file.seek(0, 2)
+    file_size = file.tell()
+    file.seek(0)
+
+    if file_size > MAX_FILE_SIZE:
+        return jsonify({"error": "Maximum file size is 10 MB"}), 400
+
+    stored_filename, pdf_path = save_pdf(file)
+
+    try:
+        _, page_count = extract_pdf_text(pdf_path)
+
+    except Exception as e:
+
+        return jsonify({
+            "error": str(e)
+        }), 400
+
+    document_id = save_chat_document(
+        user_id=user_id,
+        conversation_id=conversation_id,
+        original_filename=file.filename,
+        stored_filename=stored_filename,
+        page_count=page_count,
+        file_size=file_size)
+
+    return jsonify({
+        "success": True,
+        "document_id": document_id,
+        "filename": file.filename,
+        "page_count": page_count
     })

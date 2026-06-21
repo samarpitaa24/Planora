@@ -63,43 +63,73 @@ async def summarize_note(text: str) -> str:
     """
     Use Gemini API to generate a summary of the note.
     """
+
     try:
-        import google.generativeai as genai
+
         import os
         from dotenv import load_dotenv
-        
-        # Resolve env path from project root or planora_app/env
+        from google import genai
+
         env_paths = [
-            os.path.join(os.path.dirname(__file__), '../../.env'),
-            os.path.join(os.path.dirname(__file__), '../env'),
+            os.path.join(
+                os.path.dirname(__file__),
+                "../../.env"
+            ),
+            os.path.join(
+                os.path.dirname(__file__),
+                "../env"
+            )
         ]
+
         for env_path in env_paths:
+
             if os.path.exists(env_path):
+
                 load_dotenv(dotenv_path=env_path)
+
                 break
-        
-        # Try GEMINI_API_KEY first, then GOOGLE_API_KEY
-        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        
+
+        api_key = (
+            os.getenv("GEMINI_API_KEY")
+            or
+            os.getenv("GOOGLE_API_KEY")
+        )
+
         if not api_key:
-            return "Error: Gemini API key not configured. Please set GEMINI_API_KEY in env file."
-        
-        genai.configure(api_key=api_key)
-        
-        model = genai.GenerativeModel("gemini-2.5-flash")
-        prompt = f"""Please provide a concise and well-structured summary of the following study notes. 
-Organize it with:
-- Key Concepts (bullet points)
-- Important Points (bullet points)
-- Quick Summary (2-3 sentences)
+
+            return (
+                "Error: Gemini API key not configured."
+            )
+
+        client = genai.Client(api_key=api_key)
+
+        prompt = f"""
+Please provide a concise and well-structured summary of the following study notes.
+
+Organize it into:
+
+• Key Concepts
+• Important Points
+• Quick Summary
 
 Notes:
-{text}"""
-        
-        response = model.generate_content(prompt)
-        return response.text
+
+{text}
+"""
+
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+
+        if hasattr(response, "text") and response.text:
+
+            return response.text
+
+        return "Could not generate summary."
+
     except Exception as e:
-        print(f"Summarize note error: {e}")
-        import traceback
-        traceback.print_exc()
+
+        print("Summarize note error:", e)
+
         return f"Could not generate summary: {str(e)}"

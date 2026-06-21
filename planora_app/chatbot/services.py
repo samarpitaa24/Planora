@@ -4,7 +4,7 @@ from bson import ObjectId
 from planora_app.extensions import get_db
 import os
 from google import genai
-from planora_app.chatbot.prompts import SYSTEM_PROMPT
+from planora_app.ai.prompts import SYSTEM_PROMPT
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -216,3 +216,37 @@ def toggle_pin(
             }
         }
     )
+    
+from datetime import datetime, UTC
+
+
+def save_chat_document(
+    user_id,
+    conversation_id,
+    original_filename,
+    stored_filename,
+    page_count,
+    file_size
+):
+
+    db = get_db()
+
+    result = db.chat_documents.insert_one({
+
+        "user_id": user_id,
+
+        "conversation_id": conversation_id,
+
+        "original_filename": original_filename,
+
+        "stored_filename": stored_filename,
+
+        "page_count": page_count,
+
+        "file_size": file_size,
+
+        "created_at": datetime.now(UTC)
+
+    })
+
+    return str(result.inserted_id)

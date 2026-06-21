@@ -1,138 +1,413 @@
-{% extends "base.html" %}
+let currentConversationId = null;
 
-{% block title %}
-Study Assistant
-{% endblock %}
+document.addEventListener("DOMContentLoaded", () => {
 
-{% block content %}
+    loadConversations();
 
-<link
-rel="stylesheet"
-href="{{ url_for('static', filename='css/chatbot.css') }}"
->
+    document
+        .getElementById("new-chat-btn")
+        .addEventListener(
+            "click",
+            createConversation
+        );
 
-<div class="chatbot-page">
+    document
+        .querySelector(
+            ".chat-input-area button"
+        )
+        .addEventListener(
+            "click",
+            sendMessage
+        );
 
-    <aside class="chat-sidebar">
+    document
+        .querySelector(
+            ".chat-input-area textarea"
+        )
+        .addEventListener(
+            "keydown",
+            (e) => {
 
-    <button
-        class="new-chat-btn"
-        id="new-chat-btn"
-    >
-        + New Chat
-    </button>
+                if (
+                    e.key === "Enter" &&
+                    !e.shiftKey
+                ) {
 
-    <div
-        class="chat-history"
-        id="chat-history"
-    >
-    </div>
+                    e.preventDefault();
 
-    </aside>
+                    sendMessage();
 
-    <main class="chat-main">
+                }
 
-        <div class="chat-messages">
+            }
+        );
 
-            <div class="assistant-message">
-                Hello! I'm your Planora Study Assistant.
-            </div>
+        document
+            .getElementById("upload-pdf-btn")
+            .addEventListener(
+                "click",
+                () => {
 
-        </div>
+                    document
+                        .getElementById(
+                            "pdf-upload"
+                        )
+                        .click();
 
-        <div class="chat-input-wrapper">
+                }
+            );
+});
 
-    <!-- Selected tools / uploaded files -->
+async function loadConversations() {
 
-    <div id="selected-items">
+    const historyContainer =
+        document.getElementById(
+            "chat-history"
+        );
 
-    </div>
+    try {
 
-    <!-- Input -->
+        const response =
+            await fetch(
+                "/chatbot/conversations"
+            );
 
-    <div class="chat-input-area">
+        const conversations =
+            await response.json();
 
-        <input
-            type="file"
-            id="pdf-upload"
-            accept=".pdf"
-            hidden
-        >
+        historyContainer.innerHTML = "";
 
-        <button
-            type="button"
-            id="plus-btn"
-            class="plus-btn"
-        >
-            +
-        </button>
+        conversations.forEach(
+            conversation => {
 
-        <div
-            id="tool-menu"
-            class="tool-menu hidden"
-        >
+            const item = document.createElement("div");
 
-            <div
-                class="tool-option"
-                data-tool="upload"
-            >
-                📄 Upload PDF
-            </div>
+            item.className =
+                "chat-history-item";
 
-            <div
-                class="tool-option"
-                data-tool="flashcards"
-            >
-                📚 Generate Flashcards
-            </div>
+            item.dataset.id =
+                conversation.id;
 
-            <div
-                class="tool-option"
-                data-tool="test"
-            >
-                📝 Generate Test
-            </div>
+            const title =
+                document.createElement("span");
 
-            <div
-                class="tool-option"
-                data-tool="mindmap"
-            >
-                🧠 Generate Mindmap
-            </div>
+            title.textContent =
+                conversation.title;
 
-        </div>
+            const actions =
+                document.createElement("div");
 
-        <textarea
+            actions.className =
+                "chat-actions";
 
-            id="chat-input"
+            const pinBtn =
+                document.createElement("span");
 
-            placeholder="Ask anything about your studies..."
+            pinBtn.textContent =
+                conversation.is_pinned
+                ? "📌"
+                : "📍";
 
-            rows="1"
+            pinBtn.className =
+                "chat-pin-btn";
 
-        ></textarea>
+            pinBtn.addEventListener(
+                "click",
+                async (e) => {
 
-        <button
+                    e.stopPropagation();
 
-            id="send-btn"
+                    await fetch(
+                        `/chatbot/pin/${conversation.id}`,
+                        {
+                            method: "POST"
+                        }
+                    );
 
-            class="send-btn"
+                    loadConversations();
 
-        >
+                }
+            );
 
-            ↑
+            const deleteBtn =
+                document.createElement("span");
 
-        </button>
+            deleteBtn.textContent =
+                "🗑";
 
-    </div>
+            deleteBtn.className =
+                "chat-delete-btn";
 
-</div>
+            deleteBtn.addEventListener(
+                "click",
+                async (e) => {
 
-    </main>
+                    e.stopPropagation();
 
-</div>
+                    if (
+                        !confirm(
+                            "Delete this chat?"
+                        )
+                    ) {
+                        return;
+                    }
 
-<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+                    await fetch(
+                        `/chatbot/delete/${conversation.id}`,
+                        {
+                            method: "DELETE"
+                        }
+                    );
 
-{% endblock %}
+                    loadConversations();
+
+                }
+            );
+
+            actions.appendChild(pinBtn);
+            actions.appendChild(deleteBtn);
+
+            item.appendChild(title);
+            item.appendChild(actions);
+
+            item.addEventListener(
+                "click",
+                () => {
+
+                    currentConversationId =
+                        conversation.id;
+
+                    loadConversation(
+                        conversation.id
+                    );
+
+                }
+            );
+
+            historyContainer.appendChild(item);
+            }
+        );
+
+    } catch(error) {
+
+        console.error(error);
+
+    }
+
+}
+
+async function loadConversation(
+    conversationId
+) {
+
+    try {
+
+        const response =
+            await fetch(
+                `/chatbot/conversation/${conversationId}`
+            );
+
+        const messages =
+            await response.json();
+
+        const container =
+            document.querySelector(
+                ".chat-messages"
+            );
+
+        container.innerHTML = "";
+
+        if (
+            messages.length === 0
+        ) {
+
+            container.innerHTML =
+                `
+                <div class="assistant-message">
+                    Start a new conversation 👋
+                </div>
+                `;
+
+            return;
+
+        }
+
+        messages.forEach(msg => {
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+            div.className =
+                msg.sender === "user"
+                ? "user-message"
+                : "assistant-message";
+
+            if (
+                msg.sender === "assistant"
+            ) {
+
+                div.innerHTML =
+                    marked.parse(
+                        msg.message
+                    );
+
+            } else {
+
+                div.textContent =
+                    msg.message;
+
+            }
+
+            container.appendChild(
+                div
+            );
+
+        });
+
+        container.scrollTop =
+            container.scrollHeight;
+
+    } catch(error) {
+
+        console.error(error);
+
+    }
+
+}
+
+async function createConversation() {
+    console.log("NEW CHAT CLICKED");
+    try {
+
+        const response =
+            await fetch(
+                "/chatbot/new",
+                {
+                    method: "POST"
+                }
+            );
+
+        const data =
+            await response.json();
+
+        currentConversationId =
+            data.conversation_id;
+
+        await loadConversations();
+
+        await loadConversation(
+            currentConversationId
+        );
+
+    } catch(error) {
+
+        console.error(error);
+
+    }
+
+}
+
+async function sendMessage() {
+
+    if (!currentConversationId) {
+
+        alert(
+            "Please create or select a chat first."
+        );
+
+        return;
+
+    }
+
+    const textarea =
+        document.querySelector(
+            ".chat-input-area textarea"
+        );
+
+    const message =
+        textarea.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    textarea.value = "";
+
+    const container =
+        document.querySelector(
+            ".chat-messages"
+        );
+
+    const userDiv =
+        document.createElement(
+            "div"
+        );
+
+    userDiv.className =
+        "user-message";
+
+    userDiv.textContent =
+        message;
+
+    container.appendChild(
+        userDiv
+    );
+
+    const loadingDiv =
+        document.createElement(
+            "div"
+        );
+
+    loadingDiv.className =
+        "assistant-message";
+
+    loadingDiv.textContent =
+        "Thinking...";
+
+    container.appendChild(
+        loadingDiv
+    );
+
+    container.scrollTop =
+        container.scrollHeight;
+
+    try {
+
+        const response =
+            await fetch(
+                "/chatbot/send",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type":
+                        "application/json"
+                    },
+                    body: JSON.stringify({
+                        conversation_id:
+                        currentConversationId,
+                        message:
+                        message
+                    })
+                }
+            );
+
+        await response.json();
+
+        await loadConversations();
+
+        await loadConversation(
+            currentConversationId
+        );
+
+    } catch(error) {
+
+        console.error(error);
+
+        loadingDiv.textContent =
+            "Something went wrong.";
+
+    }
+
+}

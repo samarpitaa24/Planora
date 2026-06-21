@@ -51,9 +51,6 @@ def create_app():
     from planora_app.insights.routes import insights_bp
     app.register_blueprint(insights_bp)
     
-    # Register the main app route for '/'
-    from planora_app.routes import main_bp
-    app.register_blueprint(main_bp)
     
     from planora_app.chatbot.routes import chatbot_bp
     app.register_blueprint(chatbot_bp)
