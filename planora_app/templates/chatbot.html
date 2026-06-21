@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}
+Study Assistant
+{% endblock %}
+
+{% block content %}
+
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='css/chatbot.css') }}"
+>
+
+<div class="chatbot-page">
+
+    <aside class="chat-sidebar">
+
+    <button
+        class="new-chat-btn"
+        id="new-chat-btn"
+    >
+        + New Chat
+    </button>
+
+    <div
+        class="chat-history"
+        id="chat-history"
+    >
+    </div>
+
+    </aside>
+
+    <main class="chat-main">
+
+        <div class="chat-messages">
+
+            <div class="assistant-message">
+                Hello! I'm your Planora Study Assistant.
+            </div>
+
+        </div>
+
+        <div class="chat-input-wrapper">
+
+    <!-- Selected tools / uploaded files -->
+
+    <div id="selected-items">
+
+    </div>
+
+    <!-- Input -->
+
+    <div class="chat-input-area">
+
+        <input
+            type="file"
+            id="pdf-upload"
+            accept=".pdf"
+            hidden
+        >
+
+        <button
+            type="button"
+            id="plus-btn"
+            class="plus-btn"
+        >
+            +
+        </button>
+
+        <div
+            id="tool-menu"
+            class="tool-menu hidden"
+        >
+
+            <div
+                class="tool-option"
+                data-tool="upload"
+            >
+                📄 Upload PDF
+            </div>
+
+            <div
+                class="tool-option"
+                data-tool="flashcards"
+            >
+                📚 Generate Flashcards
+            </div>
+
+            <div
+                class="tool-option"
+                data-tool="test"
+            >
+                📝 Generate Test
+            </div>
+
+            <div
+                class="tool-option"
+                data-tool="mindmap"
+            >
+                🧠 Generate Mindmap
+            </div>
+
+        </div>
+
+        <textarea
+
+            id="chat-input"
+
+            placeholder="Ask anything about your studies..."
+
+            rows="1"
+
+        ></textarea>
+
+        <button
+
+            id="send-btn"
+
+            class="send-btn"
+
+        >
+
+            ↑
+
+        </button>
+
+    </div>
+
+</div>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+
+{% endblock %}

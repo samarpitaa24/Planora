@@ -9,8 +9,6 @@ def create_app():
     from planora_app.dashboard.routes import dashboard_bp
     app.register_blueprint(dashboard_bp)
 
-    from planora_app.dashboard.flashcards_routes import flashcards_bp
-    app.register_blueprint(flashcards_bp)
 
     from planora_app.dashboard.cards_routes import cards_bp   # ✅ new
     app.register_blueprint(cards_bp)
@@ -43,5 +41,15 @@ def create_app():
     
     from planora_app.insights.routes import insights_bp
     app.register_blueprint(insights_bp)
+    
+    # Register the main app route for '/'
+    from planora_app.routes import main_bp
+    app.register_blueprint(main_bp)
+    
+    from planora_app.chatbot.routes import chatbot_bp
+    app.register_blueprint(chatbot_bp)
+    
+    from planora_app.flashcards.routes import flashcards_bp
+    app.register_blueprint(flashcards_bp)
     
     return app

@@ -1,5 +1,5 @@
 # planora_app/dashboard/cards_services.py
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import Counter
 import platform
 from bson import ObjectId
@@ -8,7 +8,7 @@ from planora_app.extensions import get_db
 # configuration
 BUCKET_MINUTES = 15                 # bucket granularity
 BUCKETS_PER_DAY = 24 * 60 // BUCKET_MINUTES  # 96
-MIN_SESSIONS_REQUIRED = 15
+MIN_SESSIONS_REQUIRED = 5
 MAX_SESSIONS_TO_FETCH = 30
 # window sizes (in number of buckets). 2 hours max -> 8 buckets (8*15=120)
 WINDOW_BUCKET_OPTIONS = [2, 3, 4, 6, 8]  # 30m,45m,60m,90m,120m
@@ -57,24 +57,29 @@ def _add_session_to_buckets(start_dt: datetime, end_dt: datetime, buckets: list)
         cur += BUCKET_MINUTES
 
 
-def _preferred_time_from_qna(user_doc: dict) -> str:
-    """
-    Try to extract a fallback preferred time string from user doc.
-    Looks for 'preferred_time' key first, then qna.morning_evening_person.
-    """
-
+def _preferred_time_from_qna(user_doc: dict):
     qna = user_doc.get("qna", {}) or {}
-    me =qna.get("morning_evening_person") or qna.get("preferred_time")
-    if not me:
-        return "Not set"
-    me = me.lower()
-    if "morning" in me:
-        return "Morning (6:00 AM – 10:00 AM)"
-    if "evening" in me:
-        return "Evening (5:00 PM – 9:00 PM)"
-    if "night" in me or "night owl" in me:
-        return "Night (9:00 PM – 12:00 AM)"
-    return me.title()
+
+    preferred_time = qna.get("preferred_study_time")
+
+    if preferred_time:
+        start = preferred_time.get("start")
+        end = preferred_time.get("end")
+
+        if start and end:
+            try:
+                start_dt = datetime.strptime(start, "%H:%M")
+                end_dt = datetime.strptime(end, "%H:%M")
+
+                start_str = start_dt.strftime("%I:%M %p").lstrip("0")
+                end_str = end_dt.strftime("%I:%M %p").lstrip("0")
+
+                return f"{start_str} – {end_str}"
+
+            except Exception:
+                pass
+
+    return "Start a few study sessions"
 
 
 
@@ -103,8 +108,10 @@ def calculate_best_time(user_id: str, debug: bool = False) -> dict:
     if len(sessions) < MIN_SESSIONS_REQUIRED:
         # fallback to user's preferred time
         pref = _preferred_time_from_qna(user_obj)
-        return {"best_time": pref}
-
+        return {
+        "best_time": pref,
+        "source": "preference"
+    }
     buckets = [0] * BUCKETS_PER_DAY
     session_times = []
 
@@ -119,7 +126,10 @@ def calculate_best_time(user_id: str, debug: bool = False) -> dict:
 
     if sum(buckets) == 0:
         pref = _preferred_time_from_qna(user_obj)
-        return {"best_time": pref}
+        return {
+        "best_time": pref,
+        "source": "preference"
+    }
 
     # Sliding window over duplicated buckets (wrap-around)
     extended = buckets + buckets
@@ -146,8 +156,11 @@ def calculate_best_time(user_id: str, debug: bool = False) -> dict:
     start_str = _format_time_from_minutes(start_min)
     end_str = _format_time_from_minutes(end_min % (24 * 60))
 
-    result = {"best_time": f"{start_str} to {end_str}"}
-
+    result = {
+    "best_time": f"{start_str} to {end_str}",
+    "source": "sessions"
+    }
+    
     if debug:
         result["sessions_used"] = session_times
         result["bucket_counts"] = buckets
@@ -157,90 +170,168 @@ def calculate_best_time(user_id: str, debug: bool = False) -> dict:
 #SUBJECT RECOMMENDATION 
 
 def get_priority_focus(user_id: str) -> dict:
-    """
-    Returns the recommended subject for the user along with reason.
-    Handles categories: Last Studied, Under Studied, Over Studied, Difficulty-Based.
-    """
+
     db = get_db()
 
-    # Validate and fetch user
     try:
         user_obj = db.users.find_one({"_id": ObjectId(user_id)})
     except Exception:
-        return {"subject": "Invalid user", "reason": "User ID format is incorrect"}
+        return {
+            "subject": "Invalid user",
+            "reason": "User ID format is incorrect",
+            "source": "error"
+        }
 
     if not user_obj:
-        return {"subject": "No user found", "reason": "Start using Planora to get recommendations"}
+        return {
+            "subject": "No user found",
+            "reason": "Start using Planora to get recommendations",
+            "source": "error"
+        }
 
-    today = datetime.utcnow().date()
+    subjects = user_obj.get("qna", {}).get("subjects", [])
 
-    # Fetch last 15 sessions
-    sessions_cursor = db.sessions.find({"user_id": user_id}).sort("start_time", -1).limit(15)
-    sessions = list(sessions_cursor)
+    # CASE 1 : No subjects configured
+    if not subjects:
+        return {
+            "subject": "No subjects",
+            "reason": "Please add subjects in preferences",
+            "source": "empty"
+        }
 
-    # --- New user fallback (Difficulty-Based) ---
-    if not sessions:
-        subjects = user_obj.get("qna", {}).get("subjects", [])
-        if subjects:
-            mid_index = len(subjects) // 2
-            subj = subjects[mid_index]
-            return {"subject": subj, "reason": f"Recommended subject: {subj} (medium difficulty)"}
-        return {"subject": "No subjects", "reason": "Please add subjects in your preferences"}
+    # Only consider recent history
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=90)
 
-    # --- Build stats from sessions ---
-    subject_data = {}
-    for s in sessions:
-        subj = s.get("subject")
-        session_date_val = s.get("date")
-        if not subj or not session_date_val:
-            continue
-
-        # Handle date as string or datetime
-        if isinstance(session_date_val, str):
-            try:
-                session_date = datetime.strptime(session_date_val, "%Y-%m-%d").date()
-            except ValueError:
-                continue
-        elif isinstance(session_date_val, datetime):
-            session_date = session_date_val.date()
-        else:
-            continue
-
-        if subj not in subject_data:
-            subject_data[subj] = {"last_date": session_date, "count": 1}
-        else:
-            subject_data[subj]["count"] += 1
-            if session_date > subject_data[subj]["last_date"]:
-                subject_data[subj]["last_date"] = session_date
-
-    if not subject_data:
-        return {"subject": "No valid sessions", "reason": "Check your session logs"}
-
-    # Compute days since last studied
-    for subj, data in subject_data.items():
-        data["days_since"] = (today - data["last_date"]).days
-
-    # --- Last Studied (neglected) ---
-    priority_subj, info = max(
-        subject_data.items(),
-        key=lambda x: (x[1]["days_since"], -x[1]["count"])  # tie-breaker: less frequent subject
+    sessions = list(
+        db.sessions.find({
+            "user_id": user_id,
+            "completion_status": "Completed",
+            "start_time": {"$gte": cutoff_date}
+        })
     )
-    if info["days_since"] > 0:
-        reason_text = f"Last studied: {info['days_since']} day{'s' if info['days_since'] != 1 else ''} ago"
-        return {"subject": priority_subj, "reason": reason_text}
 
-    # --- Under Studied ---
-    avg_count = sum(d["count"] for d in subject_data.values()) / len(subject_data)
-    under_studied = [s for s, d in subject_data.items() if d["count"] < avg_count]
-    if under_studied:
-        subj = under_studied[0]
-        reason_text = f"You should focus on {subj} today"
-        return {"subject": subj, "reason": reason_text}
+    # CASE 2 : New user
+    if not sessions:
+        return {
+            "subject": subjects[0],
+            "reason": "Start building momentum with one of your selected subjects",
+            "source": "new_user"
+        }
 
-    # --- Over Studied / Balanced fallback ---
-    return {"subject": "All subjects balanced", "reason": "Keep up your study rhythm!"}
+    # Build statistics
+    subject_stats = {
+        subject: {
+            "minutes": 0,
+            "sessions": 0,
+            "last_studied": None
+        }
+        for subject in subjects
+    }
 
+    for session in sessions:
 
+        subject = session.get("subject")
+
+        if subject not in subject_stats:
+            continue
+
+        start = session.get("start_time")
+        end = session.get("end_time")
+
+        if not start or not end:
+            continue
+
+        minutes = max(
+            int((end - start).total_seconds() / 60),
+            0
+        )
+
+        subject_stats[subject]["minutes"] += minutes
+        subject_stats[subject]["sessions"] += 1
+
+        last_date = start.date()
+
+        if (
+            subject_stats[subject]["last_studied"] is None
+            or last_date > subject_stats[subject]["last_studied"]
+        ):
+            subject_stats[subject]["last_studied"] = last_date
+
+    # CASE 3 : Never studied subjects
+    never_studied = [
+        s for s, stats in subject_stats.items()
+        if stats["sessions"] == 0
+    ]
+
+    if never_studied:
+        subject = never_studied[0]
+
+        return {
+            "subject": subject,
+            "reason": f"You haven't studied {subject} yet",
+            "source": "never_studied"
+        }
+
+    today = datetime.now(timezone.utc).date()
+
+    # CASE 4 : Neglected subjects
+    neglected_subject = None
+    max_days = -1
+
+    for subject, stats in subject_stats.items():
+
+        days_since = (
+            today - stats["last_studied"]
+        ).days
+
+        if days_since > max_days:
+            max_days = days_since
+            neglected_subject = subject
+
+    if max_days >= 3:
+        return {
+            "subject": neglected_subject,
+            "reason": f"Last studied {max_days} days ago",
+            "source": "neglected"
+        }
+
+    # CASE 5 : Under-studied subjects
+    minute_values = [
+        stats["minutes"]
+        for stats in subject_stats.values()
+    ]
+
+    max_minutes = max(minute_values)
+    min_minutes = min(minute_values)
+
+    # Balanced threshold = 20%
+    if max_minutes > 0:
+
+        difference_ratio = (
+            (max_minutes - min_minutes)
+            / max_minutes
+        )
+
+        if difference_ratio <= 0.20:
+            return {
+                "subject": "All subjects balanced",
+                "reason": "Keep up your study rhythm!",
+                "source": "balanced"
+            }
+
+    under_studied_subject = min(
+        subject_stats.items(),
+        key=lambda item: (
+            item[1]["minutes"],
+            item[1]["sessions"]
+        )
+    )[0]
+
+    return {
+        "subject": under_studied_subject,
+        "reason": f"You've spent less time on {under_studied_subject} recently",
+        "source": "under_studied"
+    }
 
 #streaks 
 
@@ -271,7 +362,7 @@ def get_daily_streak(user_id: str) -> dict:
 
     # Fetch all completed sessions in current month
     sessions_cursor = db.sessions.find({
-        "user_id": ObjectId(user_id),
+        "user_id": user_id,
         "date": {"$gte": start_month.strftime("%Y-%m-%d"), "$lte": today.strftime("%Y-%m-%d")},
         "completion_status": "Completed"  # <-- only completed sessions
     })

@@ -44,14 +44,11 @@
 
 /* Two-part layout: main content + sidebar */
 .dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr 320px;
-  gap: 0;
-  /* Remove height: 100% and overflow: hidden to allow content to expand */
-  /* Remove min-height: auto to work with fixed chatbot */
-  width: 100%;
-  /* Add grid-auto-rows: max-content so main content can grow */
-  grid-auto-rows: max-content;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    width: 100%;
+    grid-auto-rows: max-content;
 }
 
 .dashboard-grid > * {
@@ -798,5 +795,90 @@
 
   #flash-progress {
     min-width: 45px;
+  }
+}
+
+/* ------------new code ------  */
+
+/* ==========================
+   QUICK ACTIONS
+========================== */
+
+.dashboard-tools {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+
+
+.quick-actions-panel,
+.task-plan-panel {
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid rgba(168, 139, 250, 0.1);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.quick-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+
+
+.quick-action-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  padding: 18px;
+
+  border-radius: 14px;
+
+  background: linear-gradient(
+    135deg,
+    var(--purple-50),
+    var(--pink-50)
+  );
+
+  border: 1px solid rgba(168, 139, 250, 0.15);
+
+  transition: all 0.25s ease;
+}
+
+.quick-action-card:hover {
+  transform: translateY(-4px);
+
+  box-shadow: 0 8px 18px rgba(168,139,250,0.15);
+
+  border-color: rgba(168,139,250,0.3);
+}
+
+.action-icon {
+  font-size: 1.8rem;
+}
+
+.action-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.action-desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+@media (max-width: 1024px) {
+
+  .dashboard-tools {
+      grid-template-columns: 1fr;
+  }
+
+  .quick-actions-grid {
+      grid-template-columns: 1fr;
   }
 }

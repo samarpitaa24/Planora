@@ -1,21 +1,26 @@
 document.addEventListener("DOMContentLoaded", async () => {
+
     const subjectEl = document.getElementById("priority-subject");
     const reasonEl = document.getElementById("priority-reason");
 
     try {
+
         const res = await fetch("/cards/priority-focus");
         const data = await res.json();
 
-        if (res.ok) {
-            subjectEl.textContent = data.subject || "No recommendation";
-            reasonEl.textContent = data.reason || "";
-        } else {
-            subjectEl.textContent = "Error fetching recommendation";
-            reasonEl.textContent = data.error || "";
+        if (!res.ok) {
+            throw new Error(data.error || "Failed to fetch");
         }
+
+
+        subjectEl.textContent = data.subject;
+        reasonEl.textContent = data.reason;
+
     } catch (err) {
+
         console.error(err);
-        subjectEl.textContent = "Error fetching recommendation";
-        reasonEl.textContent = err.message;
+
+        subjectEl.textContent = "Error";
+        reasonEl.textContent = "Could not load recommendation";
     }
 });
