@@ -1,9 +1,14 @@
 from flask import Flask
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 
 
 def create_app():
+    load_dotenv()
+    load_dotenv(Path(__file__).resolve().parent / ".env")
     app = Flask(__name__)
-    app.secret_key = "dummy_key_for_testing"
+    app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-change-later")
 
     # Import and register blueprints
     from planora_app.dashboard.routes import dashboard_bp
@@ -33,8 +38,12 @@ def create_app():
     app.register_blueprint(preferences_bp)
     
     # Import and register auth blueprint
-    from planora_app.auth.routes import auth
+    from planora_app.auth.routes import auth, init_oauth
+    init_oauth(app)
     app.register_blueprint(auth)
+
+    from planora_app.routes import main_bp
+    app.register_blueprint(main_bp)
 
     from planora_app.onboarding.routes import onboarding_bp
     app.register_blueprint(onboarding_bp)
