@@ -39,11 +39,14 @@ def get_user_notes(user_id: str, filter_type=None, filter_value=None):
         text = note.get("text", "")
         # Partial text for display
         snippet = " ".join(text.split()[:35]) + ("..." if len(text.split()) > 35 else "")
+        created_at = note.get("created_at")
+        if isinstance(created_at, datetime):
+            created_at = created_at.isoformat()
         notes_list.append({
             "_id": str(note["_id"]),
             "text": text,
             "snippet": snippet,
-            "created_at": note.get("created_at").strftime("%Y-%m-%d %H:%M"),
+            "created_at": created_at,
             "starred": note.get("starred", False)
         })
     return notes_list

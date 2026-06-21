@@ -14,6 +14,25 @@ document.addEventListener("DOMContentLoaded", function () {
     setTimeout(()=> { statusEl.style.display = "none"; }, 3000);
   }
 
+  function formatDateTimeIST(timestamp) {
+    if (!timestamp) return "";
+    let dateObj = new Date(timestamp);
+    if (Number.isNaN(dateObj.getTime())) {
+      dateObj = new Date(timestamp.replace(" ", "T"));
+    }
+    if (Number.isNaN(dateObj.getTime())) return timestamp;
+    return dateObj.toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
   async function fetchLatest() {
     try {
       const res = await fetch("/notes/latest");
@@ -26,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       if (recentNoteEl) recentNoteEl.style.display = "block";
       if (recentNoteText) recentNoteText.textContent = n.text;
-      if (recentNoteTime) recentNoteTime.textContent = n.created_at || "";
+      if (recentNoteTime) recentNoteTime.textContent = formatDateTimeIST(n.created_at) || "";
     } catch (err) {
       console.error("Failed to fetch latest note:", err);
     }
