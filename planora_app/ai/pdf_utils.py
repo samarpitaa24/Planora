@@ -21,8 +21,6 @@ MAX_FILE_SIZE = 10 * 1024 * 1024      # 10 MB
 
 MAX_PAGES = 100
 
-CHUNK_SIZE = 4000
-
 ALLOWED_EXTENSIONS = {
     "pdf"
 }
@@ -95,18 +93,3 @@ def extract_pdf_text(pdf_path):
         page_count
     )
     
-def chunk_text(text):
-
-    chunks = []
-
-    start = 0
-
-    while start < len(text):
-
-        end = start + CHUNK_SIZE
-
-        chunks.append(text[start:end])
-
-        start = end
-
-    return chunks

@@ -1,4 +1,7 @@
-def chunk_text(text, chunk_size=4000):
+CHUNK_SIZE = 4000
+
+
+def chunk_text(text):
 
     chunks = []
 
@@ -6,9 +9,13 @@ def chunk_text(text, chunk_size=4000):
 
     while start < len(text):
 
-        end = start + chunk_size
+        end = start + CHUNK_SIZE
 
-        chunks.append(text[start:end])
+        chunks.append(
+
+            text[start:end]
+
+        )
 
         start = end
 

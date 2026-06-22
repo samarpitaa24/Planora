@@ -3,8 +3,13 @@ from bson import ObjectId
 
 from planora_app.extensions import get_db
 import os
-from google import genai
 from planora_app.ai.prompts import SYSTEM_PROMPT
+
+import os
+from planora_app.ai.pdf_utils import extract_pdf_text
+from planora_app.ai.chunking import chunk_text
+from planora_app.ai.gemini import generate_response
+from planora_app.flashcards.services import generate_flashcards
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -20,25 +25,21 @@ def create_conversation(user_id: str, title: str = "New Chat"):
     "updated_at": datetime.now(UTC)}
 
     result = db.chat_conversations.insert_one(conversation)
-
     return str(result.inserted_id)
 
 def get_user_conversations(user_id: str):
     db = get_db()
-
     conversations = list(
         db.chat_conversations.find(
             {"user_id": user_id}
         ).sort([
             ("is_pinned", -1),
             ("updated_at", -1)
-        ])
-    )
+        ]))
 
     result = []
 
     for convo in conversations:
-
         result.append({
             "id": str(convo["_id"]),
             "title": convo.get(
@@ -54,23 +55,30 @@ def get_user_conversations(user_id: str):
     return result
 
 def save_message(
-    conversation_id: str,
-    sender: str,
-    message: str
+    conversation_id,
+    sender,
+    message,
+    message_type="text",
+    tool_id=None,
+    tool_title=None
 ):
+
     db = get_db()
 
     db.chat_messages.insert_one({
+
         "conversation_id": conversation_id,
         "sender": sender,
         "message": message,
+        "message_type": message_type,
+        "tool_id": tool_id,
+        "tool_title": tool_title,
         "created_at": datetime.now(UTC)
-    })
 
+    })
 
 def get_messages(conversation_id: str):
     db = get_db()
-
     messages = list(
         db.chat_messages.find(
             {"conversation_id": conversation_id}
@@ -80,91 +88,99 @@ def get_messages(conversation_id: str):
     result = []
 
     for msg in messages:
-
         result.append({
             "sender": msg["sender"],
-            "message": msg["message"]
-        })
+            "message": msg["message"],
+            "message_type": msg.get("message_type","text"),
+            "tool_id": msg.get("tool_id"),
+            "tool_title": msg.get("tool_title")})
 
     return result
 
-
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
-
-def get_gemini_reply(conversation_id: str, user_message: str):
-
+def get_active_document(conversation_id):
     db = get_db()
+    return db.chat_documents.find_one({
+        "conversation_id": conversation_id,
+        "is_active": True})
 
+
+def get_gemini_reply(conversation_id, user_message):
+    db = get_db()
     history = list(
-        db.chat_messages.find(
-            {
-                "conversation_id":
-                conversation_id
-            }
-        )
+        db.chat_messages.find({
+            "conversation_id": conversation_id
+        })
         .sort("created_at", -1)
-        .limit(10)
-    )
+        .limit(10) )
 
     history.reverse()
-
-    conversation_context = ""
-
-    for msg in history:
-
-        conversation_context += (
-            f"{msg['sender']}: "
-            f"{msg['message']}\n"
+    conversation_history = ""
+    for message in history:
+        conversation_history += (
+            f"{message['sender']}: "
+            f"{message['message']}\n"
         )
+
+    active_document = get_active_document(conversation_id)
+    
+    lower_message = user_message.lower()
+
+    if ("flashcard" in lower_message or "flashcards" in lower_message):
+
+        if not active_document:
+            return {
+                "type": "text",
+                "content": "Please select a study source first."
+            }
+
+        flashcard_set = generate_flashcards(
+            str(active_document["_id"]),
+            10
+        )
+
+        return {
+            "type": "flashcards",
+            "content": flashcard_set
+        }
+    
+    pdf_context = ""
+
+    if active_document:
+
+        pdf_path = os.path.join(
+            "planora_app",
+            "static",
+            "uploads",
+            "pdfs",
+            active_document["stored_filename"]
+        )
+
+    try:
+        text, _ = extract_pdf_text(pdf_path)
+        chunks = chunk_text(text)
+        pdf_context = "\n\n".join(chunks[:3])
+
+    except Exception:
+        pdf_context = ""
 
     prompt = f"""
         {SYSTEM_PROMPT}
-
-        Conversation History:
-
-        {conversation_context}
-
-        Current Question:
-
-        {user_message}
-
-        Answer:
-        """
-
-    try:
-
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
-
-        if (
-            hasattr(response, "text")
-            and response.text
-        ):
-            return response.text
-
-        return (
-            "I couldn't generate a response."
-        )
-
-    except Exception as e:
-
-        print("Gemini Error:", e)
-
-        return (
-            "The study assistant is currently busy. "
-            "Please try again."
-        )
+        Study Material:{pdf_context}
+        Conversation:{conversation_history}
+        Current Question:{user_message}
+        Answer: """
         
-def update_conversation_title(
-    conversation_id: str,
-    title: str
-):
-    db = get_db()
+    response = generate_response(prompt)
 
+    return {
+        "type": "text",
+        "content": response
+    }
+
+        
+def update_conversation_title(conversation_id: str,title: str):
+    db = get_db()
+    
     db.chat_conversations.update_one(
         {
             "_id": ObjectId(conversation_id)
@@ -176,9 +192,7 @@ def update_conversation_title(
         }
     )
     
-def delete_conversation(
-    conversation_id: str
-):
+def delete_conversation(conversation_id: str):
     db = get_db()
 
     db.chat_conversations.delete_one({
@@ -190,9 +204,7 @@ def delete_conversation(
     })
 
 
-def toggle_pin(
-    conversation_id: str
-):
+def toggle_pin(conversation_id: str):
     db = get_db()
 
     conversation = db.chat_conversations.find_one({
@@ -220,33 +232,129 @@ def toggle_pin(
 from datetime import datetime, UTC
 
 
-def save_chat_document(
-    user_id,
-    conversation_id,
-    original_filename,
-    stored_filename,
-    page_count,
-    file_size
-):
-
+def save_chat_document(user_id,conversation_id,original_filename,stored_filename,page_count,file_size):
     db = get_db()
 
-    result = db.chat_documents.insert_one({
+    existing_document = db.chat_documents.find_one({
+    "conversation_id": conversation_id,
+    "original_filename": original_filename,
+    "file_size": file_size})
 
-        "user_id": user_id,
-
+    if existing_document:
+        return str(existing_document["_id"])
+    
+    existing_active = db.chat_documents.find_one({
         "conversation_id": conversation_id,
+        "is_active": True
+    })
 
+    if existing_active is None:
+        is_active = True
+    else:
+        is_active = False
+
+    result = db.chat_documents.insert_one({
+        "user_id": user_id,
+        "conversation_id": conversation_id,
         "original_filename": original_filename,
-
         "stored_filename": stored_filename,
-
         "page_count": page_count,
-
         "file_size": file_size,
-
+        "is_active": is_active,
         "created_at": datetime.now(UTC)
-
     })
 
     return str(result.inserted_id)
+
+def get_chat_documents(conversation_id):
+    db = get_db()
+    documents = list(
+        db.chat_documents.find({
+            "conversation_id": conversation_id}))
+
+    result = []
+
+    for document in documents:
+        result.append({
+            "id": str(document["_id"]),
+            "original_filename": document["original_filename"],
+            "page_count": document["page_count"],
+            "file_size": document["file_size"],
+            "is_active": document.get(
+                "is_active",
+                False
+            )})
+
+    return result
+
+def set_active_document(conversation_id, document_id):
+    db = get_db()
+    db.chat_documents.update_many(
+        {
+            "conversation_id": conversation_id
+        },
+
+        {
+            "$set": {
+                "is_active": False
+            }
+        })
+
+    db.chat_documents.update_one(
+        {
+            "_id": ObjectId(document_id)
+        },
+        {
+            "$set": {
+                "is_active": True
+            }
+        })
+
+    return True
+
+def delete_chat_document(document_id):
+    db = get_db()
+
+    document = db.chat_documents.find_one({
+        "_id": ObjectId(document_id)
+    })
+
+    if not document:
+        return
+
+    pdf_path = os.path.join(
+        "planora_app",
+        "static",
+        "uploads",
+        "pdfs",
+        document["stored_filename"]
+    )
+
+    if os.path.exists(pdf_path):
+        os.remove(pdf_path)
+
+    conversation_id = document["conversation_id"]
+
+    was_active = document.get("is_active",False)
+
+    db.chat_documents.delete_one({"_id": ObjectId(document_id)})
+
+    if was_active:
+        latest = db.chat_documents.find_one(
+            {
+                "conversation_id": conversation_id
+            },
+            sort=[("created_at", -1)]
+        )
+
+        if latest:
+            db.chat_documents.update_one(
+                {
+                    "_id": latest["_id"]
+                },
+                {
+                    "$set": {
+                        "is_active": True
+                    }
+                }
+            )

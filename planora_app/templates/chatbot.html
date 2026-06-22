@@ -1,413 +1,435 @@
-let currentConversationId = null;
+{% extends "base.html" %}
 
-document.addEventListener("DOMContentLoaded", () => {
+{% block title %}
+Study Assistant
+{% endblock %}
 
-    loadConversations();
+{% block content %}
 
-    document
-        .getElementById("new-chat-btn")
-        .addEventListener(
-            "click",
-            createConversation
-        );
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='css/chatbot.css') }}"
+>
 
-    document
-        .querySelector(
-            ".chat-input-area button"
-        )
-        .addEventListener(
-            "click",
-            sendMessage
-        );
+<div class="chatbot-page">
 
-    document
-        .querySelector(
-            ".chat-input-area textarea"
-        )
-        .addEventListener(
-            "keydown",
-            (e) => {
+    <!-- ================= Sidebar ================= -->
 
-                if (
-                    e.key === "Enter" &&
-                    !e.shiftKey
-                ) {
+    <aside class="chat-sidebar">
 
-                    e.preventDefault();
+        <button
+            id="new-chat-btn"
+            class="new-chat-btn"
+        >
+            + New Chat
+        </button>
 
-                    sendMessage();
+        <div
+            id="chat-history"
+            class="chat-history"
+        >
+        </div>
 
-                }
+    </aside>
 
-            }
-        );
+    <!-- ================= Main ================= -->
 
-        document
-            .getElementById("upload-pdf-btn")
-            .addEventListener(
-                "click",
-                () => {
+    <main class="chat-main">
 
-                    document
-                        .getElementById(
-                            "pdf-upload"
-                        )
-                        .click();
+        <!-- Study Sources -->
 
-                }
-            );
-});
+        <section class="study-sources">
 
-async function loadConversations() {
+            <div class="study-source-header">
 
-    const historyContainer =
-        document.getElementById(
-            "chat-history"
-        );
+                <h3>
 
-    try {
+                    Study Sources
 
-        const response =
-            await fetch(
-                "/chatbot/conversations"
-            );
+                </h3>
 
-        const conversations =
-            await response.json();
+                <button
+                    id="add-pdf-btn"
+                    class="add-pdf-btn"
+                >
 
-        historyContainer.innerHTML = "";
+                    + Add PDF
 
-        conversations.forEach(
-            conversation => {
+                </button>
 
-            const item = document.createElement("div");
+            </div>
 
-            item.className =
-                "chat-history-item";
+            <div
+                id="study-source-list"
+                class="study-source-list"
+            >
 
-            item.dataset.id =
-                conversation.id;
+                <!-- dynamically rendered -->
 
-            const title =
-                document.createElement("span");
+            </div>
 
-            title.textContent =
-                conversation.title;
+            <input
 
-            const actions =
-                document.createElement("div");
+                id="pdf-upload"
 
-            actions.className =
-                "chat-actions";
+                type="file"
 
-            const pinBtn =
-                document.createElement("span");
+                accept=".pdf"
 
-            pinBtn.textContent =
-                conversation.is_pinned
-                ? "📌"
-                : "📍";
+                hidden
 
-            pinBtn.className =
-                "chat-pin-btn";
+            >
 
-            pinBtn.addEventListener(
-                "click",
-                async (e) => {
+        </section>
 
-                    e.stopPropagation();
+        <!-- Chat Messages -->
 
-                    await fetch(
-                        `/chatbot/pin/${conversation.id}`,
-                        {
-                            method: "POST"
-                        }
-                    );
+        <section
 
-                    loadConversations();
+            id="chat-messages"
 
-                }
-            );
+            class="chat-messages"
 
-            const deleteBtn =
-                document.createElement("span");
+        >
 
-            deleteBtn.textContent =
-                "🗑";
+            <div class="assistant-message">
 
-            deleteBtn.className =
-                "chat-delete-btn";
+                👋 Hello!
 
-            deleteBtn.addEventListener(
-                "click",
-                async (e) => {
+                <br><br>
 
-                    e.stopPropagation();
+                Upload a study source and ask anything.
 
-                    if (
-                        !confirm(
-                            "Delete this chat?"
-                        )
-                    ) {
-                        return;
-                    }
+                <br>
 
-                    await fetch(
-                        `/chatbot/delete/${conversation.id}`,
-                        {
-                            method: "DELETE"
-                        }
-                    );
+                You can also generate flashcards, quizzes and mindmaps from your study material.
 
-                    loadConversations();
+            </div>
 
-                }
-            );
+        </section>
 
-            actions.appendChild(pinBtn);
-            actions.appendChild(deleteBtn);
+        <!-- AI Actions -->
 
-            item.appendChild(title);
-            item.appendChild(actions);
+        <section class="chat-actions">
 
-            item.addEventListener(
-                "click",
-                () => {
+            <button
 
-                    currentConversationId =
-                        conversation.id;
+                id="flashcards-btn"
 
-                    loadConversation(
-                        conversation.id
-                    );
+                class="action-btn"
 
-                }
-            );
+                type="button"
 
-            historyContainer.appendChild(item);
-            }
-        );
+            >
 
-    } catch(error) {
+                📚 Flashcards
 
-        console.error(error);
+            </button>
 
-    }
+            <button
 
-}
+                id="quiz-btn"
 
-async function loadConversation(
-    conversationId
-) {
+                class="action-btn"
 
-    try {
+                type="button"
 
-        const response =
-            await fetch(
-                `/chatbot/conversation/${conversationId}`
-            );
+            >
 
-        const messages =
-            await response.json();
+                📝 Quiz
 
-        const container =
-            document.querySelector(
-                ".chat-messages"
-            );
+            </button>
 
-        container.innerHTML = "";
+            <button
 
-        if (
-            messages.length === 0
-        ) {
+                id="mindmap-btn"
 
-            container.innerHTML =
-                `
-                <div class="assistant-message">
-                    Start a new conversation 👋
-                </div>
-                `;
+                class="action-btn"
 
-            return;
+                type="button"
 
-        }
+            >
 
-        messages.forEach(msg => {
+                🧠 Mindmap
 
-            const div =
-                document.createElement(
-                    "div"
-                );
+            </button>
 
-            div.className =
-                msg.sender === "user"
-                ? "user-message"
-                : "assistant-message";
+        </section>
 
-            if (
-                msg.sender === "assistant"
-            ) {
+        <!-- Chat Input -->
 
-                div.innerHTML =
-                    marked.parse(
-                        msg.message
-                    );
+        <section class="chat-input-wrapper">
 
-            } else {
+            <div class="chat-input-area">
 
-                div.textContent =
-                    msg.message;
+                <textarea
 
-            }
+                    id="chat-input"
 
-            container.appendChild(
-                div
-            );
+                    rows="1"
 
-        });
+                    placeholder="Ask anything about your studies..."
 
-        container.scrollTop =
-            container.scrollHeight;
+                    autocomplete="off"
 
-    } catch(error) {
+                ></textarea>
 
-        console.error(error);
+                <button
 
-    }
+                    id="send-btn"
 
-}
+                    class="send-btn"
 
-async function createConversation() {
-    console.log("NEW CHAT CLICKED");
-    try {
+                    type="button"
 
-        const response =
-            await fetch(
-                "/chatbot/new",
-                {
-                    method: "POST"
-                }
-            );
+                >
 
-        const data =
-            await response.json();
+                    ↑
 
-        currentConversationId =
-            data.conversation_id;
+                </button>
 
-        await loadConversations();
+            </div>
 
-        await loadConversation(
-            currentConversationId
-        );
+        </section>
 
-    } catch(error) {
+    </main>
 
-        console.error(error);
+</div>
 
-    }
+<!-- ================= Flashcards Modal ================= -->
 
-}
+<div
 
-async function sendMessage() {
+    id="flashcards-modal"
 
-    if (!currentConversationId) {
+    class="tool-modal hidden"
 
-        alert(
-            "Please create or select a chat first."
-        );
+>
 
-        return;
+    <div class="tool-modal-content">
 
-    }
+        <h3>
 
-    const textarea =
-        document.querySelector(
-            ".chat-input-area textarea"
-        );
+            Generate Flashcards
 
-    const message =
-        textarea.value.trim();
+        </h3>
 
-    if (!message) {
-        return;
-    }
+        <p>
 
-    textarea.value = "";
+            Choose the study source.
 
-    const container =
-        document.querySelector(
-            ".chat-messages"
-        );
+        </p>
 
-    const userDiv =
-        document.createElement(
-            "div"
-        );
+        <div
 
-    userDiv.className =
-        "user-message";
+            id="flashcards-source-list"
 
-    userDiv.textContent =
-        message;
+            class="tool-source-list"
 
-    container.appendChild(
-        userDiv
-    );
+        >
 
-    const loadingDiv =
-        document.createElement(
-            "div"
-        );
+        </div>
 
-    loadingDiv.className =
-        "assistant-message";
+        <div class="tool-modal-buttons">
 
-    loadingDiv.textContent =
-        "Thinking...";
+            <button
 
-    container.appendChild(
-        loadingDiv
-    );
+                id="flashcards-cancel"
 
-    container.scrollTop =
-        container.scrollHeight;
+                class="secondary-btn"
 
-    try {
+            >
 
-        const response =
-            await fetch(
-                "/chatbot/send",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type":
-                        "application/json"
-                    },
-                    body: JSON.stringify({
-                        conversation_id:
-                        currentConversationId,
-                        message:
-                        message
-                    })
-                }
-            );
+                Cancel
 
-        await response.json();
+            </button>
 
-        await loadConversations();
+            <button
 
-        await loadConversation(
-            currentConversationId
-        );
+                id="flashcards-generate"
 
-    } catch(error) {
+                class="primary-btn"
 
-        console.error(error);
+            >
 
-        loadingDiv.textContent =
-            "Something went wrong.";
+                Generate
 
-    }
+            </button>
 
-}
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= Quiz Modal ================= -->
+
+<div
+
+    id="quiz-modal"
+
+    class="tool-modal hidden"
+
+>
+
+    <div class="tool-modal-content">
+
+        <h3>
+
+            Generate Quiz
+
+        </h3>
+
+        <p>
+
+            Choose the study source.
+
+        </p>
+
+        <div
+
+            id="quiz-source-list"
+
+            class="tool-source-list"
+
+        >
+
+        </div>
+
+        <div class="quiz-options">
+
+            <label>
+
+                Questions
+
+            </label>
+
+            <select id="quiz-count">
+
+                <option value="10">
+
+                    10
+
+                </option>
+
+                <option value="20">
+
+                    20
+
+                </option>
+
+                <option value="30">
+
+                    30
+
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="tool-modal-buttons">
+
+            <button
+
+                id="quiz-cancel"
+
+                class="secondary-btn"
+
+            >
+
+                Cancel
+
+            </button>
+
+            <button
+
+                id="quiz-generate"
+
+                class="primary-btn"
+
+            >
+
+                Generate
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ================= Mindmap Modal ================= -->
+
+<div
+
+    id="mindmap-modal"
+
+    class="tool-modal hidden"
+
+>
+
+    <div class="tool-modal-content">
+
+        <h3>
+
+            Generate Mindmap
+
+        </h3>
+
+        <p>
+
+            Choose the study source.
+
+        </p>
+
+        <div
+
+            id="mindmap-source-list"
+
+            class="tool-source-list"
+
+        >
+
+        </div>
+
+        <div class="tool-modal-buttons">
+
+            <button
+
+                id="mindmap-cancel"
+
+                class="secondary-btn"
+
+            >
+
+                Cancel
+
+            </button>
+
+            <button
+
+                id="mindmap-generate"
+
+                class="primary-btn"
+
+            >
+
+                Generate
+
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script
+src="{{ url_for('static', filename='js/chatbot.js') }}"
+></script>
+
+{% endblock %}
