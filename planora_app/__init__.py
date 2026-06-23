@@ -1,3 +1,5 @@
+
+
 from flask import Flask
 import os
 from pathlib import Path
@@ -52,5 +54,8 @@ def create_app():
     
     from planora_app.insights.routes import insights_bp
     app.register_blueprint(insights_bp)
+
+    from planora_app.challenges.routes import challenges_bp
+    app.register_blueprint(challenges_bp)
     
     return app
