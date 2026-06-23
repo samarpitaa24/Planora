@@ -89,6 +89,47 @@ body {
 }
 
 /* 7) Filters: layout and controls */
+.notes-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.primary-btn {
+  appearance: none;
+  border: 0;
+  border-radius: 9999px;
+  padding: 12px 24px;
+  background-image: var(--gradient);
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(167, 139, 250, 0.25);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.secondary-btn {
+  appearance: none;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  border-radius: 9999px;
+  padding: 12px 24px;
+  background: white;
+  color: var(--text-strong);
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.secondary-btn:hover {
+  background: rgba(245, 245, 255, 0.9);
+  transform: translateY(-1px);
+}
+
 .filters {
   display: grid;
   gap: 12px;
@@ -97,7 +138,7 @@ body {
 
 @media (min-width: 640px) {
   .filters {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     align-items: center;
   }
 }
@@ -151,6 +192,73 @@ body {
   filter: saturate(1.05);
 }
 
+#noteModalText {
+  width: 100%;
+  min-height: 220px;
+  border-radius: 18px;
+  border: 1px solid rgba(17, 24, 39, 0.12);
+  padding: 16px;
+  resize: vertical;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-strong);
+  background: #fff;
+  margin-top: 16px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+}
+
+.modal-card {
+  width: min(760px, 100%);
+  background: #ffffff;
+  border-radius: 24px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+  padding: 28px;
+  display: grid;
+  gap: 20px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  color: var(--text-strong);
+}
+
+.modal-close {
+  appearance: none;
+  border: 0;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  color: var(--text-strong);
+  background: rgba(243, 244, 246, 0.9);
+  cursor: pointer;
+  font-size: 22px;
+  line-height: 42px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 #applyFilter:active {
   transform: translateY(0);
   filter: saturate(0.98);
@@ -179,9 +287,34 @@ body {
   box-shadow: var(--shadow-soft);
   transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
   display: grid;
-  grid-template-columns: 1fr auto; /* content | star */
-  align-items: start; /* allow rows to grow with tall content */
+  grid-template-columns: 1fr auto;
+  align-items: start;
   gap: 12px;
+}
+
+.note-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.note-action {
+  appearance: none;
+  border: 0;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  background-image: var(--gradient);
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 120ms ease, box-shadow 160ms ease, filter 160ms ease;
+}
+
+.note-action:hover {
+  transform: translateY(-1px);
 }
 
 #notesList > li:hover {
@@ -226,6 +359,60 @@ body {
   align-items: center;
   font-size: 13px;
   color: var(--text-muted);
+}
+
+/* Action buttons for note card */
+.note-actions {
+  display: grid;
+  gap: 10px;
+  align-items: center;
+}
+
+.note-action {
+  appearance: none;
+  border: 0;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: linear-gradient(135deg, rgba(244, 114, 182, 0.95), rgba(167, 139, 250, 0.95));
+  color: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 36px;
+  text-align: center;
+  transition: transform 120ms ease, box-shadow 160ms ease, filter 160ms ease;
+  box-shadow: 0 6px 16px rgba(167, 139, 250, 0.25), 0 2px 6px rgba(244, 114, 182, 0.15);
+}
+
+.note-action:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
+  filter: saturate(1.05);
+}
+
+.note-actions .note-star {
+  font-size: 20px;
+}
+
+.note-actions .note-delete {
+  background: rgba(244, 114, 182, 0.15);
+  color: #9f1239;
+  box-shadow: none;
+}
+
+.note-actions .note-delete:hover {
+  background: rgba(244, 114, 182, 0.25);
+}
+
+.pinned-label {
+  display: inline-flex;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background: rgba(167, 139, 250, 0.12);
+  color: #6d28d9;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 /* Star button (right-aligned) */

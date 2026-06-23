@@ -33,7 +33,7 @@ def get_user_notes(user_id: str, filter_type=None, filter_value=None):
         elif filter_type == "starred":
             query["starred"] = True
 
-    notes_cursor = db.notes.find(query).sort("created_at", -1)
+    notes_cursor = db.notes.find(query).sort([("starred", -1), ("created_at", -1)])
     notes_list = []
     for note in notes_cursor:
         text = note.get("text", "")
@@ -50,6 +50,16 @@ def get_user_notes(user_id: str, filter_type=None, filter_value=None):
             "starred": note.get("starred", False)
         })
     return notes_list
+
+def delete_note(note_id):
+    db = get_db()
+    result = db.notes.delete_one({"_id": ObjectId(note_id)})
+    return result.deleted_count > 0
+
+def update_note(note_id, text: str):
+    db = get_db()
+    result = db.notes.update_one({"_id": ObjectId(note_id)}, {"$set": {"text": text}})
+    return result.modified_count > 0
 
 def toggle_star_note(note_id, starred: bool):
     db = get_db()

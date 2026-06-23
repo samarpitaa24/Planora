@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session, request, jsonify
 # inside notes_list_routes.py
-from planora_app.notes_list.notes_list_services import get_user_notes, toggle_star_note
+from planora_app.notes_list.notes_list_services import get_user_notes, toggle_star_note, delete_note, update_note
 
 from bson import ObjectId
 
@@ -28,3 +28,26 @@ def star_note():
     new_star_value = data.get("starred")
     toggle_star_note(note_id, new_star_value)
     return jsonify({"success": True, "note_id": note_id, "starred": new_star_value})
+
+@notes_bp.route("/notes/delete", methods=["POST"])
+def delete_note_route():
+    data = request.get_json() or {}
+    note_id = data.get("note_id")
+    if not note_id:
+        return jsonify({"success": False, "error": "note_id is required"}), 400
+    deleted = delete_note(note_id)
+    if not deleted:
+        return jsonify({"success": False, "error": "Note not found"}), 404
+    return jsonify({"success": True, "note_id": note_id}), 200
+
+@notes_bp.route("/notes/update", methods=["POST"])
+def update_note_route():
+    data = request.get_json() or {}
+    note_id = data.get("note_id")
+    text = (data.get("text") or "").strip()
+    if not note_id or not text:
+        return jsonify({"success": False, "error": "note_id and text are required"}), 400
+    updated = update_note(note_id, text)
+    if not updated:
+        return jsonify({"success": False, "error": "Unable to update note"}), 404
+    return jsonify({"success": True, "note_id": note_id}), 200
