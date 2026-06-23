@@ -160,16 +160,12 @@
   </div>
 </div>
 
-<!-- Audio element for alarm -->
-<audio id="alarmSound" preload="auto">
-  <source src="{{ url_for('static', filename='sounds/timeraudio.mp3') }}" type="audio/mpeg">
-</audio>
-
 <!-- Hidden input for user_id -->
 <input type="hidden" id="userId" value="{{ user_id }}">
 
 <!-- JS -->
-<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+<!-- timer.js already loaded globally from base.html -->
+<!-- alarmSound audio element also available globally from base.html -->
 <script src="{{ url_for('static', filename='js/notes.js') }}"></script>
 
 {% endblock %}
