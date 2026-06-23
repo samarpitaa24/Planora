@@ -1,0 +1,59 @@
+{% extends "base.html" %} {% block title %} Flashcards {% endblock %} {% block
+content %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/flashcards.css') }}"
+/>
+
+<div class="flashcards-page">
+  <main class="flashcards-main">
+    <div class="flashcards-topbar">
+      <a id="back-to-chat" href="#" class="back-button"> ← Back to Chat </a>
+
+      <div id="flashcards-title" class="flashcards-title">Flashcards</div>
+    </div>
+
+    <div class="progress-section">
+      <div id="progress-text" class="progress-text">0 / 0</div>
+
+      <div class="progress-bar">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+    </div>
+
+    <div id="flashcard-container" class="flashcard-container">
+      <div id="flashcard-front" class="flashcard-face">
+        Select a flashcard set
+      </div>
+    </div>
+
+    <div class="flashcard-actions">
+      <button id="show-answer-btn" class="primary-btn">Show Answer</button>
+    </div>
+
+    <div class="navigation-buttons">
+      <button id="previous-btn" class="secondary-btn">← Previous</button>
+
+      <button id="next-btn" class="secondary-btn">Next →</button>
+    </div>
+  </main>
+
+  <aside class="flashcards-sidebar">
+    <div class="sidebar-header">
+      <h2>📚 Flashcards</h2>
+    </div>
+
+    <div id="flashcards-history" class="flashcards-history"></div>
+  </aside>
+</div>
+
+<script>
+  const SELECTED_SET = "{{ selected_set }}";
+
+  const CONVERSATION_ID = "{{ conversation_id }}";
+</script>
+
+<script src="{{ url_for('static', filename='js/flashcards.js') }}"></script>
+
+{% endblock %}

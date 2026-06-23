@@ -1,175 +1,293 @@
-/**
- * Planora Flashcards Script - Enhanced
- * Features:
- * - Upload PDF/TXT/DOCX
- * - Flippable flashcards with smooth 3D animation
- * - Smooth left/right navigation
- * - Arrow controls positioned below cards
- * - Progress tracking
- */
+let flashcardSets = [];
+let currentSet = null;
+let currentIndex = 0;
+let showingAnswer = false;
 
-const uploadInput = document.getElementById("doc-upload")
-const uploadBtn = document.querySelector(".upload-btn")
-const cancelBtn = document.querySelector(".cancel-btn")
-const uploadStatus = document.getElementById("upload-status")
+document.addEventListener("DOMContentLoaded", () => {
 
-const flashInner = document.getElementById("flashcard-inner")
-const flashFront = document.getElementById("flashcard-front")
-const flashBack = document.getElementById("flashcard-back")
-const flashLeft = document.getElementById("flash-left")
-const flashRight = document.getElementById("flash-right")
-const flashProgress = document.getElementById("flash-progress")
+    const backButton = document.getElementById("back-to-chat");
 
-let flashcards = []
-let currentIndex = 0
-let controller = null
-let isFlipped = false
+    if ( backButton && CONVERSATION_ID) {
 
-// Pastel color palette for cards
-const cardColors = [
-  "#FFE5E9", // Pastel pink
-  "#E5F0FF", // Pastel blue
-  "#E5FFE9", // Pastel mint
-  "#FFF5E5", // Pastel peach
-  "#F0E5FF", // Pastel purple
-  "#E5FFF5", // Pastel cyan
-]
+    backButton.href =
 
-uploadBtn?.addEventListener("click", handleUpload)
-cancelBtn?.addEventListener("click", cancelUpload)
-flashInner?.addEventListener("click", flipCard)
-flashLeft?.addEventListener("click", showPrev)
-flashRight?.addEventListener("click", showNext)
+        `/chatbot/?conversation=${CONVERSATION_ID}`;}
 
-function handleUpload() {
-  const file = uploadInput.files[0]
-  if (!file) {
-    alert("Please select a file to upload.")
-    return
-  }
+    loadFlashcardHistory();
 
-  const formData = new FormData()
-  formData.append("file", file)
-  formData.append("user_id", "6743c9d81d4d9d98ab11487b")
+    document
+        .getElementById("show-answer-btn")
+        .addEventListener("click", toggleAnswer);
 
-  controller = new AbortController()
-  const signal = controller.signal
+    document
+        .getElementById("next-btn")
+        .addEventListener("click", nextCard);
 
-  uploadStatus.textContent = "📄 Processing PDF..."
-  cancelBtn.style.display = "inline-block"
+    document
+        .getElementById("previous-btn")
+        .addEventListener("click", previousCard); });
 
-  setTimeout(() => {
-    if (uploadStatus.textContent.includes("Processing")) {
-      uploadStatus.textContent = "✨ Generating flashcards..."
+async function loadFlashcardHistory(){
+
+    const response = await fetch("/flashcards/history");
+
+    flashcardSets = await response.json();
+
+    renderHistory();
+
+    if(!flashcardSets.length){
+
+        showEmptyState();
+
+        return;
+
     }
-  }, 2000)
 
-  fetch("/flashcards/upload", {
-    method: "POST",
-    body: formData,
-    signal,
-  })
-    .then((res) => {
-      if (!res.ok) throw new Error("Upload failed")
-      return res.json()
-    })
-    .then((data) => {
-      cancelBtn.style.display = "none"
-      if (data.error) {
-        uploadStatus.textContent = `❌ Error: ${data.error}`
-        return
-      }
-      flashcards = data.flashcards
-      currentIndex = 0
-      isFlipped = false
-      if (flashcards.length > 0) {
-        uploadStatus.textContent = ""
-        showCard(currentIndex)
-        updateProgress()
-      } else {
-        uploadStatus.textContent = "No flashcards found in document."
-      }
-    })
-    .catch((err) => {
-      if (err.name === "AbortError") {
-        uploadStatus.textContent = "Upload canceled."
-      } else {
-        uploadStatus.textContent = `❌ Error: ${err.message}`
-      }
-      cancelBtn.style.display = "none"
-    })
+    let setId = SELECTED_SET;
+
+    if(!setId){
+
+        setId = flashcardSets[0].id;
+
+    }
+
+    loadFlashcardSet(setId);
+
 }
 
-function cancelUpload() {
-  if (controller) {
-    controller.abort()
-    cancelBtn.style.display = "none"
-  }
+function renderHistory(){
+
+    const container =
+        document.getElementById("flashcards-history");
+
+    container.innerHTML = "";
+
+    if(!flashcardSets.length){
+
+        container.innerHTML = `
+            <div class="empty-history">
+                No flashcards yet.
+            </div>
+        `;
+
+        return;
+
+    }
+
+    flashcardSets.forEach(set => {
+
+        const item =
+            document.createElement("div");
+
+        item.className = "history-item";
+
+        if(
+            currentSet &&
+            currentSet._id === set.id
+        ){
+            item.classList.add("active");
+        }
+
+        item.innerHTML = `
+            <div class="history-info">
+                <div class="history-title">
+                    📚 ${set.title}
+                </div>
+
+                <div class="history-subtitle">
+                    ${set.card_count} cards
+                </div>
+            </div>
+
+            <button
+                class="history-delete"
+            >
+                🗑
+            </button>
+        `;
+
+        item.addEventListener(
+            "click",
+            () => loadFlashcardSet(set.id)
+        );
+
+        item.querySelector(".history-delete")
+            .addEventListener(
+                "click",
+                event => {
+
+                    event.stopPropagation();
+
+                    deleteFlashcardSet(set.id);
+
+                }
+            );
+
+        container.appendChild(item);
+
+    });
+
 }
 
-function showCard(index) {
-  if (!flashcards[index]) return
+async function loadFlashcardSet(setId){
 
-  const card = flashcards[index]
-  const color = cardColors[index % cardColors.length]
+    const response =
+        await fetch(`/flashcards/set/${setId}`);
 
-  // Reset flip state when changing cards
-  isFlipped = false
-  flashInner.classList.remove("flipped")
+    currentSet =
+        await response.json();
 
-  // const flashCard = document.getElementById("flashcard-card")
-  // if (flashCard) {
-  //   flashCard.style.background = color
-  // }
+    currentIndex = 0;
 
+    showingAnswer = false;
 
-  const flashCard = document.getElementById("flashcard-card")
-  if (flashCard) {
-  flashCard.style.background = "#FFFFFF"  // ✅ string
-  }
+    renderHistory();
 
+    renderCard();
 
-  if (card.type === "concept") {
-    flashFront.innerHTML = `<strong>${card.front}</strong>`
-    flashBack.innerHTML = `<p>${card.back}</p>`
-  } else if (card.type === "question") {
-    flashFront.innerHTML = `<strong>Q: ${card.front}</strong>`
-    flashBack.innerHTML = `<p><strong>A:</strong> ${card.back}</p>`
-  } else {
-    flashFront.innerHTML = `<strong>${card.front || "Card"}</strong>`
-    flashBack.innerHTML = `<p>${card.back || ""}</p>`
-  }
-
-  updateProgress()
-  updateNavigation()
 }
 
-function flipCard() {
-  isFlipped = !isFlipped
-  flashInner.classList.toggle("flipped")
+function renderCard(){
+
+    if(
+        !currentSet ||
+        !currentSet.cards.length
+    ){
+
+        showEmptyState();
+
+        return;
+
+    }
+
+    const card =
+        currentSet.cards[currentIndex];
+
+    document.getElementById(
+        "flashcards-title"
+    ).textContent =
+        currentSet.title;
+
+    document.getElementById(
+        "flashcard-front"
+    ).textContent =
+        showingAnswer
+            ? card.back
+            : card.front;
+
+    document.getElementById(
+        "show-answer-btn"
+    ).textContent =
+        showingAnswer
+            ? "Show Question"
+            : "Show Answer";
+
+    document.getElementById(
+        "progress-text"
+    ).textContent =
+        `${currentIndex + 1} / ${currentSet.cards.length}`;
+
+    document.getElementById(
+        "progress-fill"
+    ).style.width =
+        `${((currentIndex + 1) / currentSet.cards.length) * 100}%`;
+
 }
 
-function showNext() {
-  if (currentIndex < flashcards.length - 1) {
-    currentIndex++
-    showCard(currentIndex)
-  }
+function toggleAnswer(){
+
+    if(!currentSet){
+        return;
+    }
+
+    showingAnswer = !showingAnswer;
+
+    renderCard();
+
 }
 
-function showPrev() {
-  if (currentIndex > 0) {
-    currentIndex--
-    showCard(currentIndex)
-  }
+function nextCard(){
+
+    if(
+        !currentSet ||
+        currentIndex >= currentSet.cards.length - 1
+    ){
+        return;
+    }
+
+    currentIndex++;
+
+    showingAnswer = false;
+
+    renderCard();
+
 }
 
-function updateProgress() {
-  if (flashProgress) {
-    flashProgress.textContent = `${currentIndex + 1} / ${flashcards.length}`
-  }
+function previousCard(){
+
+    if(
+        !currentSet ||
+        currentIndex <= 0
+    ){
+        return;
+    }
+
+    currentIndex--;
+
+    showingAnswer = false;
+
+    renderCard();
+
 }
 
-function updateNavigation() {
-  if (flashLeft) flashLeft.classList.toggle("disabled", currentIndex === 0)
-  if (flashRight) flashRight.classList.toggle("disabled", currentIndex === flashcards.length - 1)
+async function deleteFlashcardSet(setId){
+
+    const confirmed =
+        confirm(
+            "Delete this flashcard set?"
+        );
+
+    if(!confirmed){
+        return;
+    }
+
+    await fetch(
+        `/flashcards/delete/${setId}`,
+        {
+            method:"DELETE"
+        }
+    );
+
+    currentSet = null;
+
+    currentIndex = 0;
+
+    showingAnswer = false;
+
+    loadFlashcardHistory();
+
+}
+
+function showEmptyState(){
+
+    document.getElementById(
+        "flashcards-title"
+    ).textContent =
+        "Flashcards";
+
+    document.getElementById(
+        "flashcard-front"
+    ).textContent =
+        "Generate flashcards from the Study Assistant to begin.";
+
+    document.getElementById(
+        "progress-text"
+    ).textContent =
+        "0 / 0";
+
+    document.getElementById(
+        "progress-fill"
+    ).style.width =
+        "0%";
+
 }

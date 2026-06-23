@@ -15,20 +15,22 @@ block content %}
           <h2>Welcome to Planora {{ username }}!</h2>
 
           <p class="welcome-subtitle">
-            "Every day is a new opportunity to learn something amazing!"
+            "Plan smarter. Stay focused. Achieve your goals with confidence."
           </p>
         </header>
 
         <!-- Quick alerts / cards -->
         <section class="quick-cards" aria-label="Quick stats">
           <article class="card card--lavender">
-            <h3 class="card-title">Peak Focus Time</h3>
+            <h3 class="card-title">⏰ Peak Focus Time</h3>
             <div class="card-main" id="peak-focus-time">Loading...</div>
-            <p class="card-sub">Based on your highest productivity scores.</p>
+            <p class="card-sub" id="best-time-subtitle">
+              Loading...
+            </p>
           </article>
 
           <article class="card card--blush">
-            <h3 class="card-title">Priority Focus</h3>
+            <h3 class="card-title">🎯 Priority Focus</h3>
             <div class="card-main card-main--accent" id="priority-subject">
               Loading...
             </div>
@@ -38,7 +40,7 @@ block content %}
           </article>
 
           <article class="card card--mint">
-            <h3 class="card-title">Daily Streak</h3>
+            <h3 class="card-title">🔥 Daily Streak</h3>
             <div class="card-main">
               <span id="daily-streak-count">0 days</span>
             </div>
@@ -50,111 +52,77 @@ block content %}
           </article>
         </section>
 
-        <!-- Study tools - 2 column layout -->
-        <section class="study-tools" aria-label="Study tools">
-          <!-- Flashcards panel -->
-          <div class="flashcard-panel">
-            <div class="panel-header">
-              <h2 class="panel-title">Flashcards</h2>
-            </div>
+        <section class="dashboard-tools">
 
-            <div class="doc-upload">
-              <label for="doc-upload" class="upload-label">Upload:</label>
-              <input
-                id="doc-upload"
-                class="upload-input"
-                type="file"
-                accept=".pdf,.txt,.docx"
-              />
-              <button class="upload-btn" type="button" aria-label="Upload file">
-                Upload
-              </button>
-              <button
-                class="cancel-btn"
-                type="button"
-                aria-label="Cancel upload"
-                style="display: none"
-              >
-                ✖ Cancel
-              </button>
-            </div>
+    <div class="quick-actions-panel">
 
-          <div id="upload-status" class="upload-status"></div>
-
-            <!-- Flashcard display with flip animation -->
-            <div class="flashcard-stage">
-              <div class="flashcard-card" id="flashcard-card">
-                <div class="flashcard-inner" id="flashcard-inner">
-                  <div class="flashcard-front" id="flashcard-front">
-                    Click to upload a document
-                  </div>
-                  <div class="flashcard-back" id="flashcard-back">
-                    Your answers will appear here
-                  </div>
-                </div>
-              </div>
-
-              <!-- Navigation arrows below the card -->
-              <div class="flashcard-nav">
-                <button
-                  id="flash-left"
-                  class="flash-nav"
-                  aria-label="Previous card"
-                  type="button"
-                >
-                  ←
-                </button>
-                <div id="flash-progress">0 / 0</div>
-                <button
-                  id="flash-right"
-                  class="flash-nav"
-                  aria-label="Next card"
-                  type="button"
-                >
-                  →
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Task plan panel -->
-          <div class="task-plan-panel">
-            <div class="panel-header">
-              <h2 class="panel-title">Today's Plan</h2>
-            </div>
-
-            <div class="task-timeline" id="dashboard-task-list" role="list">
-              <div class="task-row"><em>Loading tasks...</em></div>
-            </div>
-          </div>
-        </section>
-      </section>
-
-      <!-- Chatbot sidebar -->
-      <aside class="chatbot-sidebar" aria-label="Study Assistant">
-        <header class="chatbot-header">
-          <h2 class="chatbot-title">Study Assistant</h2>
-        </header>
-        <div class="chatbot-body" id="chatbot-body">
-          <div id="chat-messages"></div>
+        <div class="panel-header">
+            <h2 class="panel-title">SMART WORKSPACE</h2>
         </div>
-        <footer class="chatbot-inputbar" aria-label="Chat input">
-          <input
-            class="chat-input"
-            type="text"
-            placeholder="Ask me something…"
-            aria-label="Ask a question"
-          />
-          <button class="chat-send" type="button" aria-label="Send message">💬</button>
-        </footer>
-      </aside>
+
+        <div class="quick-actions-grid">
+
+            <a href="/timer" class="quick-action-card">
+                <span class="action-icon">⏱️</span>
+                <span class="action-title">Start Pomodoro</span>
+                <span class="action-desc">
+                    Begin a focused study session
+                </span>
+            </a>
+
+            <a href="/chatbot" class="quick-action-card">
+              <span class="action-icon">🧠</span>
+              <span class="action-title">AI Workspace</span>
+              <span class="action-desc">
+                Study with AI, Flashcards & Mindmaps
+              </span>
+            </a>
+
+            <a href="/challenges" class="quick-action-card">
+                <span class="action-icon">🏆</span>
+                <span class="action-title">Challenges</span>
+                <span class="action-desc">
+                    Complete weekly goals and earn badges
+                </span>
+            </a>
+
+          <a href="/insights" class="quick-action-card">
+            <span class="action-icon">📊</span>
+            <span class="action-title">Insights</span>
+            <span class="action-desc">
+                Track progress & discover study patterns
+            </span>
+          </a>
+
+        </div>
+
+    </div>
+
+    <div class="task-plan-panel">
+        <div class="panel-header">
+            <h2 class="panel-title">Today's Plan</h2>
+        </div>
+
+        <div
+            class="task-timeline"
+            id="dashboard-task-list"
+            role="list"
+        >
+            <div class="task-row">
+                <em>Loading tasks...</em>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+      
     </div>
   </div>
 </main>
 
 <!-- Scripts -->
-<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
-<script src="{{ url_for('static', filename='js/flashcards_2.js') }}"></script>
+
 <script src="{{ url_for('static', filename='js/best_time.js') }}"></script>
 <script src="{{ url_for('static', filename='js/priority_focus.js') }}"></script>
 <script src="{{ url_for('static', filename='js/daily_streak.js') }}"></script>

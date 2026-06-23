@@ -41,9 +41,21 @@ def create_task(db, user_id: str, name: str, deadline_str: Optional[str], priori
             raise ValueError("duration must be a number (hours)")
 
     now = datetime.utcnow()
+    if deadline is not None and deadline < now:
+        raise ValueError("Deadline must be in the future")
+
+    normalized_name = name.strip()
+    duplicate_query = {
+        "user_id": str(user_id),
+        "name": normalized_name,
+        "deadline": deadline,
+    }
+    if db.tasks.find_one(duplicate_query):
+        raise ValueError("A task with the same name and deadline already exists")
+
     task_doc = {
         "user_id": str(user_id),
-        "name": name.strip(),
+        "name": normalized_name,
         "priority": priority or "Medium",
         "duration": duration_val,
         "deadline": deadline,
@@ -62,7 +74,7 @@ def create_task(db, user_id: str, name: str, deadline_str: Optional[str], priori
     return task_doc
 
 def get_tasks_for_user(db, user_id: str):
-    cursor = db.tasks.find({"user_id": str(user_id)}).sort([("completed", 1), ("deadline", 1), ("priority", -1)])
+    cursor = db.tasks.find({"user_id": str(user_id)})
     tasks = []
     for doc in cursor:
         tasks.append(_serialize_task(doc))
@@ -109,6 +121,26 @@ def update_task(db, task_id: str, user_id: str, data: dict):
     if not set_fields:
         raise ValueError("no valid fields to update")
 
+    # Prevent duplicate tasks with the same name and deadline for this user.
+    if "name" in set_fields or "deadline" in set_fields:
+        existing = db.tasks.find_one({"_id": ObjectId(task_id), "user_id": str(user_id)})
+        if not existing:
+            raise ValueError("task not found or not owned by user")
+
+        new_name = set_fields.get("name", existing.get("name"))
+        new_deadline = set_fields.get("deadline", existing.get("deadline"))
+
+        duplicate = db.tasks.find_one(
+            {
+                "user_id": str(user_id),
+                "name": new_name,
+                "deadline": new_deadline,
+                "_id": {"$ne": ObjectId(task_id)},
+            }
+        )
+        if duplicate:
+            raise ValueError("A task with the same name and deadline already exists")
+
     set_fields["updated_at"] = datetime.utcnow()
 
     res = db.tasks.update_one(query, {"$set": set_fields})
@@ -126,12 +158,28 @@ def toggle_task_complete(db, task_id: str, user_id: str, completed: bool):
     return update_task(db, task_id, user_id, {"completed": bool(completed)})
 
 # ---------------- Dashboard: Top 3 Upcoming Tasks ----------------
+def _priority_rank(priority: str) -> int:
+    order = {"High": 0, "Medium": 1, "Low": 2}
+    return order.get(priority or "Medium", 3)
+
+
+def _task_sort_key(task: dict):
+    priority_rank = _priority_rank(task.get("priority"))
+    duration = task.get("duration")
+    duration_value = float(duration) if duration is not None else float("inf")
+    deadline = task.get("deadline")
+    deadline_value = deadline if isinstance(deadline, datetime) else datetime.max
+    return (priority_rank, duration_value, deadline_value)
+
+
 def get_top_tasks_for_user(db, user_id: str, limit: int = 3):
     """Return top upcoming / prioritized tasks for dashboard."""
-    cursor = (
-        db.tasks.find({"user_id": str(user_id), "completed": False})
-        .sort([("deadline", 1), ("priority", -1)])
-        .limit(limit)
-    )
-    tasks = [_serialize_task(doc) for doc in cursor]
+    now = datetime.utcnow()
+    docs = [
+        doc
+        for doc in db.tasks.find({"user_id": str(user_id), "completed": False})
+        if doc.get("deadline") is None or doc.get("deadline") >= now
+    ]
+    docs.sort(key=_task_sort_key)
+    tasks = [_serialize_task(doc) for doc in docs[:limit]]
     return tasks

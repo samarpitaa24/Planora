@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}
+Mindmap
+{% endblock %}
+
+{% block content %}
+
+<link
+rel="stylesheet"
+href="{{ url_for('static', filename='css/mindmap.css') }}"
+>
+
+<div class="mindmap-page">
+
+    <main class="mindmap-main">
+
+        <div class="mindmap-topbar">
+
+            <a
+                id="back-to-chat"
+                href="#"
+                class="back-button"
+            >
+
+                ← Back to Chat
+
+            </a>
+
+            <div
+                id="mindmap-title"
+                class="mindmap-title"
+            >
+
+                Study Mindmap
+
+            </div>
+
+        </div>
+
+        <div
+            id="mindmap-container"
+            class="mindmap-container"
+        >
+
+            <div
+                id="mindmap-render"
+                class="mermaid"
+            >
+
+                Select a mindmap from history
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <aside class="mindmap-sidebar">
+
+        <div class="sidebar-header">
+
+            <h2>
+
+                🧠 Mindmaps
+
+            </h2>
+
+        </div>
+
+        <div
+            id="mindmap-history"
+            class="mindmap-history"
+        >
+
+        </div>
+
+    </aside>
+
+</div>
+
+<script>
+
+const SELECTED_MAP = "{{ selected_map }}";
+
+const CONVERSATION_ID = "{{ conversation_id }}";
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+
+<script src="{{ url_for('static', filename='js/mindmap.js') }}"></script>
+
+{% endblock %}

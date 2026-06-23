@@ -1,5 +1,3 @@
-
-
 from flask import Flask
 import os
 from pathlib import Path
@@ -16,8 +14,6 @@ def create_app():
     from planora_app.dashboard.routes import dashboard_bp
     app.register_blueprint(dashboard_bp)
 
-    from planora_app.dashboard.flashcards_routes import flashcards_bp
-    app.register_blueprint(flashcards_bp)
 
     from planora_app.dashboard.cards_routes import cards_bp   # ✅ new
     app.register_blueprint(cards_bp)
@@ -35,8 +31,6 @@ def create_app():
     from planora_app.notes_list.notes_list_routes import notes_bp
     app.register_blueprint(notes_bp)
     
-    from planora_app.sessions.sessions_routes import sessions_bp
-    app.register_blueprint(sessions_bp)
     
     from planora_app.preferences.preferences_routes import preferences_bp
     app.register_blueprint(preferences_bp)
@@ -57,5 +51,15 @@ def create_app():
 
     from planora_app.challenges.routes import challenges_bp
     app.register_blueprint(challenges_bp)
+    
+    
+    from planora_app.chatbot.routes import chatbot_bp
+    app.register_blueprint(chatbot_bp)
+    
+    from planora_app.flashcards.routes import flashcards_bp
+    app.register_blueprint(flashcards_bp)
+    
+    from planora_app.mindmap.routes import mindmap_bp
+    app.register_blueprint(mindmap_bp)
     
     return app
