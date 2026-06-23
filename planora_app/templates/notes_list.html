@@ -36,10 +36,25 @@
     </select>
 
     <button id="applyFilter">Apply</button>
+    <button id="openAddNoteBtn" class="primary-btn">Add Note</button>
   </div>
 
   <!-- Notes list -->
   <ul id="notesList"></ul>
+</div>
+
+<div class="modal-overlay" id="noteModal" style="display: none;">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="noteModalTitle">Add Note</h3>
+      <button id="closeNoteModal" class="modal-close">×</button>
+    </div>
+    <textarea id="noteModalText" placeholder="Paste or type your note here..."></textarea>
+    <div class="modal-actions">
+      <button id="cancelNoteBtn" class="secondary-btn">Cancel</button>
+      <button id="saveNoteBtn" class="primary-btn">Save Note</button>
+    </div>
+  </div>
 </div>
 
 <!-- Inject USER_ID -->

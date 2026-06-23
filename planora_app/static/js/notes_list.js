@@ -6,8 +6,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const filterMonth = document.getElementById("filterMonth");
   const filterYear = document.getElementById("filterYear");
   const applyFilter = document.getElementById("applyFilter");
+  const openAddNoteBtn = document.getElementById("openAddNoteBtn");
+  const noteModal = document.getElementById("noteModal");
+  const closeNoteModal = document.getElementById("closeNoteModal");
+  const cancelNoteBtn = document.getElementById("cancelNoteBtn");
+  const saveNoteBtn = document.getElementById("saveNoteBtn");
+  const noteModalText = document.getElementById("noteModalText");
+  const noteModalTitle = document.getElementById("noteModalTitle");
 
   let allNotes = [];
+  let editingNoteId = null;
 
   // Fetch notes
   function fetchNotes(filterTypeValue = "", filterValue = "") {
@@ -40,43 +48,40 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  //   function renderNotes(notes) {
-  //     notesList.innerHTML = "";
-  //     notes.forEach(note => {
-  //       const li = document.createElement("li");
-  //       li.className = "note-item";
-  //       li.dataset.id = note._id;
-  //       li.innerHTML = `
-  //         <div class="note-text" title="Double click to expand">
-  //           ${note.snippet}
-  //         </div>
-  //         <div class="note-meta">
-  //           <span>${note.created_at}</span>
-  //           <span class="star" style="cursor:pointer">${note.starred ? "★" : "☆"}</span>
-  //         </div>
-  //       `;
+  function getFilterValue() {
+    if (filterType.value === "date") return filterDate.value;
+    if (filterType.value === "month") return filterMonth.value;
+    if (filterType.value === "year") return filterYear.value;
+    return "";
+  }
 
-  //       // Double click to expand
-  //       li.querySelector(".note-text").addEventListener("dblclick", () => {
-  //         li.querySelector(".note-text").textContent = note.text;
-  //       });
+  function filterNotesBySearch(notes) {
+    const term = noteSearch.value.trim().toLowerCase();
+    if (!term) return notes;
+    return notes.filter((n) => n.text.toLowerCase().includes(term));
+  }
 
-  //       // Star toggle
-  //       li.querySelector(".star").addEventListener("click", () => {
-  //         const newStar = !note.starred;
-  //         fetch("/notes/toggle_star", {
-  //           method: "POST",
-  //           headers: {"Content-Type":"application/json"},
-  //           body: JSON.stringify({note_id: note._id, starred: newStar})
-  //         }).then(() => {
-  //           note.starred = newStar;
-  //           li.querySelector(".star").textContent = newStar ? "★" : "☆";
-  //         });
-  //       });
+  function openNoteModal(editMode = false, note = null) {
+    noteModal.style.display = "flex";
+    if (editMode && note) {
+      noteModalTitle.textContent = "Edit Note";
+      noteModalText.value = note.text;
+      saveNoteBtn.textContent = "Update Note";
+      editingNoteId = note._id;
+    } else {
+      noteModalTitle.textContent = "Add Note";
+      noteModalText.value = "";
+      saveNoteBtn.textContent = "Save Note";
+      editingNoteId = null;
+    }
+    noteModalText.focus();
+  }
 
-  //       notesList.appendChild(li);
-  //     });
-  //   }
+  function closeNoteModalDialog() {
+    noteModal.style.display = "none";
+    noteModalText.value = "";
+    editingNoteId = null;
+  }
 
   function renderNotes(notes) {
     notesList.innerHTML = "";
@@ -85,49 +90,84 @@ document.addEventListener("DOMContentLoaded", () => {
       li.className = "note-item";
       li.dataset.id = note._id;
 
-      // Create snippet if note has more than 35 words
       const snippet =
         note.text.split(" ").length > 35
           ? note.text.split(" ").slice(0, 35).join(" ") + "..."
           : note.text;
 
       li.innerHTML = `
-        <div class="note-text" title="Double click to view full note or click to open detail view">
-          ${snippet}
+        <div class="note-main">
+          <div class="note-text" title="Double click to view full note or click to open detail view">
+            ${snippet}
+          </div>
+          <div class="note-meta">
+            <span>${formatDateTimeIST(note.created_at)}</span>
+            ${note.starred ? '<span class="pinned-label">Pinned</span>' : ''}
+          </div>
         </div>
-        <div class="note-meta">
-          <span>${formatDateTimeIST(note.created_at)}</span>
-          <span class="star" style="cursor:pointer">${note.starred ? "★" : "☆"}</span>
+        <div class="note-actions">
+          <button class="note-action note-star" aria-label="Toggle pin">
+            ${note.starred ? "★" : "☆"}
+          </button>
+          <button class="note-action note-edit" aria-label="Edit note">✎</button>
+          <button class="note-action note-delete" aria-label="Delete note">🗑</button>
         </div>
       `;
 
-      // Click to open detail page
-      li.querySelector(".note-text").addEventListener("click", () => {
+      const textDiv = li.querySelector(".note-text");
+      textDiv.addEventListener("click", () => {
         window.location.href = `/notes-detail?id=${note._id}`;
       });
-
-      // Double click to toggle full text
-      li.querySelector(".note-text").addEventListener("dblclick", (e) => {
+      textDiv.addEventListener("dblclick", (e) => {
         e.stopPropagation();
-        const textDiv = li.querySelector(".note-text");
         if (textDiv.textContent === snippet) {
-          textDiv.textContent = note.text; // show full note
+          textDiv.textContent = note.text;
         } else {
-          textDiv.textContent = snippet; // collapse back to snippet
+          textDiv.textContent = snippet;
         }
       });
 
-      // Star toggle
-      li.querySelector(".star").addEventListener("click", () => {
+      const starButton = li.querySelector(".note-star");
+      starButton.addEventListener("click", (e) => {
+        e.stopPropagation();
         const newStar = !note.starred;
         fetch("/notes/toggle_star", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ note_id: note._id, starred: newStar }),
-        }).then(() => {
-          note.starred = newStar;
-          li.querySelector(".star").textContent = newStar ? "★" : "☆";
-        });
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              note.starred = newStar;
+              fetchNotes(filterType.value, getFilterValue());
+            }
+          });
+      });
+
+      const editButton = li.querySelector(".note-edit");
+      editButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openNoteModal(true, note);
+      });
+
+      const deleteButton = li.querySelector(".note-delete");
+      deleteButton.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (!confirm("Delete this note?")) return;
+        fetch("/notes/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ note_id: note._id }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success) {
+              fetchNotes(filterType.value, getFilterValue());
+            } else {
+              alert(data.error || "Failed to delete note.");
+            }
+          });
       });
 
       notesList.appendChild(li);
@@ -136,11 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Search notes
   noteSearch.addEventListener("input", () => {
-    const term = noteSearch.value.toLowerCase();
-    const filtered = allNotes.filter((n) =>
-      n.text.toLowerCase().includes(term),
-    );
-    renderNotes(filtered);
+    renderNotes(filterNotesBySearch(allNotes));
   });
 
   // Filter type show/hide
@@ -151,6 +187,46 @@ document.addEventListener("DOMContentLoaded", () => {
       filterType.value === "month" ? "inline-block" : "none";
     filterYear.style.display =
       filterType.value === "year" ? "inline-block" : "none";
+  });
+
+  openAddNoteBtn.addEventListener("click", () => {
+    openNoteModal();
+  });
+
+  closeNoteModal.addEventListener("click", closeNoteModalDialog);
+  cancelNoteBtn.addEventListener("click", closeNoteModalDialog);
+  noteModal.addEventListener("click", (e) => {
+    if (e.target === noteModal) {
+      closeNoteModalDialog();
+    }
+  });
+
+  saveNoteBtn.addEventListener("click", () => {
+    const noteText = noteModalText.value.trim();
+    if (!noteText) {
+      alert("Please enter note text.");
+      return;
+    }
+
+    const url = editingNoteId ? "/notes/update" : "/notes/save";
+    const payload = editingNoteId
+      ? { note_id: editingNoteId, text: noteText }
+      : { text: noteText };
+
+    fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          closeNoteModalDialog();
+          fetchNotes(filterType.value, getFilterValue());
+        } else {
+          alert(data.error || "Unable to save note.");
+        }
+      });
   });
 
   applyFilter.addEventListener("click", () => {
