@@ -1,435 +1,124 @@
-{% extends "base.html" %}
-
-{% block title %}
-Study Assistant
-{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %} Study Assistant {% endblock %} {%
+block content %}
 
 <link
-rel="stylesheet"
-href="{{ url_for('static', filename='css/chatbot.css') }}"
->
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/chatbot.css') }}"
+/>
 
 <div class="chatbot-page">
+  <!-- ================= Sidebar ================= -->
 
-    <!-- ================= Sidebar ================= -->
+  <aside class="chat-sidebar">
+    <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
 
-    <aside class="chat-sidebar">
+    <div id="chat-history" class="chat-history"></div>
+  </aside>
 
-        <button
-            id="new-chat-btn"
-            class="new-chat-btn"
-        >
-            + New Chat
-        </button>
+  <!-- ================= Main ================= -->
 
-        <div
-            id="chat-history"
-            class="chat-history"
-        >
-        </div>
+  <main class="chat-main">
+    <!-- Study Sources -->
 
-    </aside>
+    <section class="study-sources">
+      <div class="study-source-header">
+        <h3>Study Sources</h3>
 
-    <!-- ================= Main ================= -->
+        <button id="add-pdf-btn" class="add-pdf-btn">+ Add PDF</button>
+      </div>
 
-    <main class="chat-main">
+      <div id="study-source-list" class="study-source-list">
+        <!-- dynamically rendered -->
+      </div>
 
-        <!-- Study Sources -->
+      <input id="pdf-upload" type="file" accept=".pdf" hidden />
+    </section>
 
-        <section class="study-sources">
+    <!-- Chat Messages -->
 
-            <div class="study-source-header">
+    <section id="chat-messages" class="chat-messages">
+      <div class="assistant-message">
+        👋 Hello!
 
-                <h3>
+        <br /><br />
 
-                    Study Sources
+        Upload a study source and ask anything.
 
-                </h3>
+        <br />
 
-                <button
-                    id="add-pdf-btn"
-                    class="add-pdf-btn"
-                >
+        You can also generate flashcards, quizzes and mindmaps from your study
+        material.
+      </div>
+    </section>
 
-                    + Add PDF
+    <!-- AI Actions -->
 
-                </button>
+    <section class="chat-actions">
+      <button id="flashcards-btn" class="action-btn" type="button">
+        📚 Flashcards
+      </button>
 
-            </div>
 
-            <div
-                id="study-source-list"
-                class="study-source-list"
-            >
+      <button id="mindmap-btn" class="action-btn" type="button">
+        🧠 Mindmap
+      </button>
+    </section>
 
-                <!-- dynamically rendered -->
+    <!-- Chat Input -->
 
-            </div>
+    <section class="chat-input-wrapper">
+      <div class="chat-input-area">
+        <textarea
+          id="chat-input"
+          rows="1"
+          placeholder="Ask anything about your studies..."
+          autocomplete="off"
+        ></textarea>
 
-            <input
-
-                id="pdf-upload"
-
-                type="file"
-
-                accept=".pdf"
-
-                hidden
-
-            >
-
-        </section>
-
-        <!-- Chat Messages -->
-
-        <section
-
-            id="chat-messages"
-
-            class="chat-messages"
-
-        >
-
-            <div class="assistant-message">
-
-                👋 Hello!
-
-                <br><br>
-
-                Upload a study source and ask anything.
-
-                <br>
-
-                You can also generate flashcards, quizzes and mindmaps from your study material.
-
-            </div>
-
-        </section>
-
-        <!-- AI Actions -->
-
-        <section class="chat-actions">
-
-            <button
-
-                id="flashcards-btn"
-
-                class="action-btn"
-
-                type="button"
-
-            >
-
-                📚 Flashcards
-
-            </button>
-
-            <button
-
-                id="quiz-btn"
-
-                class="action-btn"
-
-                type="button"
-
-            >
-
-                📝 Quiz
-
-            </button>
-
-            <button
-
-                id="mindmap-btn"
-
-                class="action-btn"
-
-                type="button"
-
-            >
-
-                🧠 Mindmap
-
-            </button>
-
-        </section>
-
-        <!-- Chat Input -->
-
-        <section class="chat-input-wrapper">
-
-            <div class="chat-input-area">
-
-                <textarea
-
-                    id="chat-input"
-
-                    rows="1"
-
-                    placeholder="Ask anything about your studies..."
-
-                    autocomplete="off"
-
-                ></textarea>
-
-                <button
-
-                    id="send-btn"
-
-                    class="send-btn"
-
-                    type="button"
-
-                >
-
-                    ↑
-
-                </button>
-
-            </div>
-
-        </section>
-
-    </main>
-
+        <button id="send-btn" class="send-btn" type="button">↑</button>
+      </div>
+    </section>
+  </main>
 </div>
 
 <!-- ================= Flashcards Modal ================= -->
 
-<div
+<div id="flashcards-modal" class="tool-modal hidden">
+  <div class="tool-modal-content">
+    <h3>Generate Flashcards</h3>
 
-    id="flashcards-modal"
+    <p>Choose the study source.</p>
 
-    class="tool-modal hidden"
+    <div id="flashcards-source-list" class="tool-source-list"></div>
 
->
+    <div class="tool-modal-buttons">
+      <button id="flashcards-cancel" class="secondary-btn">Cancel</button>
 
-    <div class="tool-modal-content">
-
-        <h3>
-
-            Generate Flashcards
-
-        </h3>
-
-        <p>
-
-            Choose the study source.
-
-        </p>
-
-        <div
-
-            id="flashcards-source-list"
-
-            class="tool-source-list"
-
-        >
-
-        </div>
-
-        <div class="tool-modal-buttons">
-
-            <button
-
-                id="flashcards-cancel"
-
-                class="secondary-btn"
-
-            >
-
-                Cancel
-
-            </button>
-
-            <button
-
-                id="flashcards-generate"
-
-                class="primary-btn"
-
-            >
-
-                Generate
-
-            </button>
-
-        </div>
-
+      <button id="flashcards-generate" class="primary-btn">Generate</button>
     </div>
-
-</div>
-
-<!-- ================= Quiz Modal ================= -->
-
-<div
-
-    id="quiz-modal"
-
-    class="tool-modal hidden"
-
->
-
-    <div class="tool-modal-content">
-
-        <h3>
-
-            Generate Quiz
-
-        </h3>
-
-        <p>
-
-            Choose the study source.
-
-        </p>
-
-        <div
-
-            id="quiz-source-list"
-
-            class="tool-source-list"
-
-        >
-
-        </div>
-
-        <div class="quiz-options">
-
-            <label>
-
-                Questions
-
-            </label>
-
-            <select id="quiz-count">
-
-                <option value="10">
-
-                    10
-
-                </option>
-
-                <option value="20">
-
-                    20
-
-                </option>
-
-                <option value="30">
-
-                    30
-
-                </option>
-
-            </select>
-
-        </div>
-
-        <div class="tool-modal-buttons">
-
-            <button
-
-                id="quiz-cancel"
-
-                class="secondary-btn"
-
-            >
-
-                Cancel
-
-            </button>
-
-            <button
-
-                id="quiz-generate"
-
-                class="primary-btn"
-
-            >
-
-                Generate
-
-            </button>
-
-        </div>
-
-    </div>
-
+  </div>
 </div>
 
 <!-- ================= Mindmap Modal ================= -->
 
-<div
+<div id="mindmap-modal" class="tool-modal hidden">
+  <div class="tool-modal-content">
+    <h3>Generate Mindmap</h3>
 
-    id="mindmap-modal"
+    <p>Choose the study source.</p>
 
-    class="tool-modal hidden"
+    <div id="mindmap-source-list" class="tool-source-list"></div>
 
->
+    <div class="tool-modal-buttons">
+      <button id="mindmap-cancel" class="secondary-btn">Cancel</button>
 
-    <div class="tool-modal-content">
-
-        <h3>
-
-            Generate Mindmap
-
-        </h3>
-
-        <p>
-
-            Choose the study source.
-
-        </p>
-
-        <div
-
-            id="mindmap-source-list"
-
-            class="tool-source-list"
-
-        >
-
-        </div>
-
-        <div class="tool-modal-buttons">
-
-            <button
-
-                id="mindmap-cancel"
-
-                class="secondary-btn"
-
-            >
-
-                Cancel
-
-            </button>
-
-            <button
-
-                id="mindmap-generate"
-
-                class="primary-btn"
-
-            >
-
-                Generate
-
-            </button>
-
-        </div>
-
+      <button id="mindmap-generate" class="primary-btn">Generate</button>
     </div>
-
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-<script
-src="{{ url_for('static', filename='js/chatbot.js') }}"
-></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
 
 {% endblock %}

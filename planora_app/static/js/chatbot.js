@@ -754,7 +754,6 @@ function clearChatWindow() {
                     TOOL MODAL STATE
 ========================================================== */
 
-let currentTool = null;
 
 let selectedToolSourceId = null;
 
@@ -775,18 +774,6 @@ document.addEventListener(
 
         () => {
           openToolModal("flashcards");
-        },
-      );
-
-    document
-
-      .getElementById("quiz-btn")
-
-      .addEventListener(
-        "click",
-
-        () => {
-          openToolModal("quiz");
         },
       );
 
@@ -816,18 +803,6 @@ document.addEventListener(
 
     document
 
-      .getElementById("quiz-cancel")
-
-      .addEventListener(
-        "click",
-
-        () => {
-          closeToolModal("quiz");
-        },
-      );
-
-    document
-
       .getElementById("mindmap-cancel")
 
       .addEventListener(
@@ -850,16 +825,6 @@ document.addEventListener(
 
     document
 
-      .getElementById("quiz-generate")
-
-      .addEventListener(
-        "click",
-
-        generateQuiz,
-      );
-
-    document
-
       .getElementById("mindmap-generate")
 
       .addEventListener(
@@ -875,8 +840,6 @@ document.addEventListener(
 ========================================================== */
 
 function openToolModal(tool) {
-  currentTool = tool;
-
   selectedToolSourceId = activeSourceId;
 
   const modal = document.getElementById(`${tool}-modal`);
@@ -1029,24 +992,6 @@ async function generateFlashcards() {
 }
 
 /* ==========================================================
-                QUIZ
-========================================================== */
-
-async function generateQuiz() {
-  const count = document.getElementById("quiz-count").value;
-
-  closeToolModal("quiz");
-
-  appendAssistantMessage(
-    `📝 Quiz generation started.
-
-Questions : ${count}
-
-(Quiz page will open after backend integration.)`,
-  );
-}
-
-/* ==========================================================
                 MINDMAP
 ========================================================== */
 
@@ -1077,8 +1022,6 @@ function appendToolCard(tool, title, description, id = null) {
 
   if (tool === "flashcards") {
     icon = "📚";
-  } else if (tool === "quiz") {
-    icon = "📝";
   } else if (tool === "mindmap") {
     icon = "🧠";
   }
@@ -1129,8 +1072,6 @@ function appendToolCard(tool, title, description, id = null) {
     () => {
       if (tool === "flashcards") {
         window.location.href = `/flashcards?set=${id}&conversation=${currentConversationId}`;
-      } else if (tool === "quiz") {
-        window.location.href = "/quiz";
       } else if (tool === "mindmap") {
         window.location.href = "/mindmap";
       }
@@ -1179,90 +1120,4 @@ async function uploadPendingSources() {
   activeSource.documentId = data.document_id;
 
   return data.document_id;
-}
-
-/*
-        -------------------------------------------------
-
-        Future Backend
-
-        FormData
-
-        PDF
-
-        conversation_id
-
-        POST /chatbot/upload-pdf
-
-        document_id
-
-        uploaded = true
-
-        -------------------------------------------------
-        */
-
-/* ==========================================================
-                    LOADING STATE
-========================================================== */
-
-function disableChat() {
-  document.getElementById("send-btn").disabled = true;
-
-  document.getElementById("chat-input").disabled = true;
-}
-
-function enableChat() {
-  document.getElementById("send-btn").disabled = false;
-
-  document.getElementById("chat-input").disabled = false;
-}
-
-/* ==========================================================
-                    RESET CHAT STATE
-========================================================== */
-
-function resetStudySources() {
-  studySources = [];
-
-  activeSourceId = null;
-
-  renderStudySources();
-}
-
-/* ==========================================================
-                    LOADING HELPERS
-========================================================== */
-
-function showThinking() {
-  return appendLoadingMessage();
-}
-
-function hideThinking(element) {
-  if (element) {
-    element.remove();
-  }
-}
-
-/* ==========================================================
-                    EMPTY CHAT 
-========================================================== */
-
-function emptyConversation() {
-  const container = document.getElementById("chat-messages");
-
-  container.innerHTML = `
-
-    <div class="assistant-message">
-
-        👋
-
-        Start learning by
-
-        uploading a study source
-
-        or asking a question.
-
-    </div>
-
-    `;
 }
