@@ -1,10 +1,11 @@
+
 import datetime
 import pytz
 
 from planora_app.dashboard.cards_services import get_priority_focus
 from planora_app.extensions import get_db
 
-IST = pytz.timezone("Asia/K"olkata")
+IST = pytz.timezone("Asia/Kolkata")
 
 # Master list of challenges
 ALL_CHALLENGES = [
@@ -27,7 +28,7 @@ ALL_CHALLENGES = [
         "badge_name": "Streak Keeper",
     },
     {
-        sequence": 4,
+        "sequence": 4,
         "id": "ch4",
         "title": "10 Pomodoro Cycles",
         "badge_name": "Deep Worker",
