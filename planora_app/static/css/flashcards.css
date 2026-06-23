@@ -1,3 +1,29 @@
+:root{
+
+    --pink-500:#f472b6;
+    --pink-600:#ec4899;
+
+    --pink-100:#ffe5ed;
+    --pink-50:#fff8fc;
+
+    --purple-500:#a78bfa;
+    --purple-600:#8b5cf6;
+
+    --purple-100:#f3e8ff;
+    --purple-50:#faf5ff;
+
+    --bg:#faf7fc;
+    --surface:#ffffff;
+
+    --text-strong:#1a1625;
+    --text:#3d3651;
+    --muted:#8b7fa8;
+
+    --shadow:0 4px 12px rgba(168,139,250,.08);
+    --shadow-hover:0 8px 20px rgba(168,139,250,.12);
+
+}
+
 *{
     margin:0;
     padding:0;
@@ -15,8 +41,8 @@
 
 .flashcards-sidebar{
     width:320px;
-    background:white;
-    border-right:1px solid #ececec;
+    background:var(--surface);
+    border-left:1px solid var(--purple-100);
     display:flex;
     flex-direction:column;
     flex-shrink:0;
@@ -24,12 +50,13 @@
 
 .sidebar-header{
     padding:24px;
-    border-bottom:1px solid #ececec;
+    border-bottom:1px solid var(--purple-100);
 }
 
 .sidebar-header h2{
     font-size:22px;
     font-weight:700;
+    color:var(--text-strong);
 }
 
 .flashcards-history{
@@ -49,16 +76,17 @@
     border-radius:14px;
     cursor:pointer;
     transition:.2s;
-    background:white;
+    background:var(--surface);
 }
 
 .history-item:hover{
-    background:#f7f5ff;
+    background:var(--purple-50);
+    border-color:var(--purple-100);
 }
 
 .history-item.active{
-    border-color:#7c5cff;
-    background:#f1edff;
+    background:var(--purple-50);
+    border-color:var(--purple-500);
 }
 
 .history-info{
@@ -72,7 +100,7 @@
 
 .history-subtitle{
     font-size:13px;
-    color:#777;
+    color:var(--muted);
     margin-top:4px;
 }
 
@@ -81,8 +109,12 @@
     background:none;
     cursor:pointer;
     font-size:18px;
+    color:var(--muted);
 }
 
+.history-delete:hover{
+    color:var(--pink-600);
+}
 /* ================= Main ================= */
 
 .flashcards-main{
@@ -101,13 +133,18 @@
 
 .back-button{
     text-decoration:none;
-    color:#7c5cff;
+    color:var(--purple-600);
     font-weight:600;
+}
+
+.back-button:hover{
+    color:var(--purple-500);
 }
 
 .flashcards-title{
     font-size:28px;
     font-weight:700;
+    color:var(--text-strong);
 }
 
 .progress-section{
@@ -118,12 +155,13 @@
     margin-bottom:10px;
     font-size:15px;
     font-weight:600;
+    color:var(--muted);
 }
 
 .progress-bar{
     width:100%;
     height:10px;
-    background:#ececec;
+    background:var(--purple-100);
     border-radius:999px;
     overflow:hidden;
 }
@@ -131,7 +169,7 @@
 .progress-fill{
     height:100%;
     width:0%;
-    background:#7c5cff;
+    background:linear-gradient(135deg,var(--purple-500),var(--pink-500));
     transition:.3s;
 }
 
@@ -147,7 +185,7 @@
 .flashcard-face{
     width:min(700px,90%);
     min-height:300px;
-    background:white;
+    background:var(--surface);
     border-radius:24px;
     padding:50px;
     display:flex;
@@ -156,7 +194,10 @@
     text-align:center;
     font-size:26px;
     line-height:1.6;
-    box-shadow:0 10px 30px rgba(0,0,0,.08);
+    /* box-shadow:0 10px 30px rgba(0,0,0,.08); */
+    color:var(--text);
+    box-shadow:var(--shadow);
+
 }
 
 /* ================= Buttons ================= */
@@ -169,16 +210,23 @@
 
 .primary-btn{
     border:none;
-    background:#7c5cff;
+    background:linear-gradient(
+        135deg,
+        var(--purple-500),
+        var(--pink-500)
+    );
     color:white;
     padding:14px 28px;
     border-radius:999px;
     cursor:pointer;
     font-size:15px;
     font-weight:600;
+    box-shadow:var(--shadow);
 }
 
 .primary-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:var(--shadow-hover);
     opacity:.92;
 }
 
@@ -190,7 +238,8 @@
 
 .secondary-btn{
     border:none;
-    background:#efefef;
+    background:var(--purple-50);
+    color:var(--text);
     padding:12px 24px;
     border-radius:999px;
     cursor:pointer;
@@ -198,7 +247,7 @@
 }
 
 .secondary-btn:hover{
-    background:#e4defd;
+    background:var(--purple-100);
 }
 
 /* ================= Empty ================= */

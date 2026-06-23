@@ -7,14 +7,6 @@ block content %}
 />
 
 <div class="chatbot-page">
-  <!-- ================= Sidebar ================= -->
-
-  <aside class="chat-sidebar">
-    <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
-
-    <div id="chat-history" class="chat-history"></div>
-  </aside>
-
   <!-- ================= Main ================= -->
 
   <main class="chat-main">
@@ -23,13 +15,14 @@ block content %}
     <section class="study-sources">
       <div class="study-source-header">
         <h3>Study Sources</h3>
+        <p class="study-source-note">
+        Text-based PDF files only • Max 10 MB
+      </p>
 
         <button id="add-pdf-btn" class="add-pdf-btn">+ Add PDF</button>
       </div>
 
-      <div id="study-source-list" class="study-source-list">
-        <!-- dynamically rendered -->
-      </div>
+      <div id="study-source-list" class="study-source-list"></div>
 
       <input id="pdf-upload" type="file" accept=".pdf" hidden />
     </section>
@@ -46,8 +39,7 @@ block content %}
 
         <br />
 
-        You can also generate flashcards, quizzes and mindmaps from your study
-        material.
+        Generate flashcards and mindmaps from your study material with AI.
       </div>
     </section>
 
@@ -57,7 +49,6 @@ block content %}
       <button id="flashcards-btn" class="action-btn" type="button">
         📚 Flashcards
       </button>
-
 
       <button id="mindmap-btn" class="action-btn" type="button">
         🧠 Mindmap
@@ -79,6 +70,14 @@ block content %}
       </div>
     </section>
   </main>
+
+  <!-- ================= Chat History ================= -->
+
+  <aside class="chat-sidebar">
+    <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
+
+    <div id="chat-history" class="chat-history"></div>
+  </aside>
 </div>
 
 <!-- ================= Flashcards Modal ================= -->
@@ -92,9 +91,26 @@ block content %}
     <div id="flashcards-source-list" class="tool-source-list"></div>
 
     <div class="tool-modal-buttons">
-      <button id="flashcards-cancel" class="secondary-btn">Cancel</button>
+      <button
+        id="flashcards-history-btn"
+        class="history-btn"
+      >
+        View History
+      </button>
 
-      <button id="flashcards-generate" class="primary-btn">Generate</button>
+      <button
+        id="flashcards-cancel"
+        class="secondary-btn"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="flashcards-generate"
+        class="primary-btn"
+      >
+        Generate
+      </button>
     </div>
   </div>
 </div>
@@ -110,9 +126,26 @@ block content %}
     <div id="mindmap-source-list" class="tool-source-list"></div>
 
     <div class="tool-modal-buttons">
-      <button id="mindmap-cancel" class="secondary-btn">Cancel</button>
+      <button
+        id="mindmap-history-btn"
+        class="history-btn"
+      >
+        View History
+      </button>
 
-      <button id="mindmap-generate" class="primary-btn">Generate</button>
+      <button
+        id="mindmap-cancel"
+        class="secondary-btn"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="mindmap-generate"
+        class="primary-btn"
+      >
+        Generate
+      </button>
     </div>
   </div>
 </div>

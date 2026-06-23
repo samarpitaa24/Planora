@@ -9,6 +9,7 @@ load_dotenv()
 # print("API KEY:", os.getenv("GEMINI_API_KEY"))
 # print("=" * 60)
 
+MODEL_NAME = "gemini-2.5-flash"
 client = genai.Client(
     api_key=os.getenv("GEMINI_API_KEY")
 )
@@ -17,12 +18,8 @@ client = genai.Client(
 def generate_response(prompt):
 
     response = client.models.generate_content(
-
-        model="gemini-2.5-flash",
-
-        contents=prompt
-
-    )
+        model=MODEL_NAME,
+        contents=prompt)
 
     if hasattr(response, "text"):
 

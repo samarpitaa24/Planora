@@ -60,30 +60,54 @@ function initializeChatbot() {
                     CREATE NEW CHAT
 ========================================================== */
 async function createConversation() {
-  try {
-    const response = await fetch(
-      "/chatbot/new",
+  currentConversationId = null;
 
-      {
-        method: "POST",
-      },
-    );
+  studySources = [];
+
+  activeSourceId = null;
+
+  renderStudySources();
+
+  const container = document.getElementById("chat-messages");
+
+  container.innerHTML = `
+    <div class="assistant-message">
+      👋 Start a new study conversation.
+    </div>
+  `;
+
+  window.history.replaceState({}, "", "/chatbot");
+}
+/* ==========================================================
+                ENSURE CONVERSATION
+========================================================== */
+
+async function ensureConversation() {
+  if (currentConversationId) {
+    return currentConversationId;
+  }
+
+  try {
+    const response = await fetch("/chatbot/new", {
+      method: "POST",
+    });
 
     const data = await response.json();
 
     currentConversationId = data.conversation_id;
-
-    studySources = [];
-
-    activeSourceId = null;
-
-    renderStudySources();
+    window.history.replaceState(
+      {},
+      "",
+      `/chatbot/?conversation=${currentConversationId}`,
+    );
 
     await loadConversations();
 
-    await loadConversation(currentConversationId);
+    return currentConversationId;
   } catch (error) {
     console.error(error);
+
+    throw error;
   }
 }
 
@@ -205,6 +229,11 @@ async function loadConversations() {
 
         () => {
           currentConversationId = conversation.id;
+          window.history.replaceState(
+            {},
+            "",
+            `/chatbot/?conversation=${conversation.id}`,
+          );
 
           loadConversations();
 
@@ -224,6 +253,7 @@ async function loadConversations() {
 ========================================================== */
 
 async function loadConversation(conversationId) {
+  currentConversationId = conversationId;
   try {
     const response = await fetch(`/chatbot/conversation/${conversationId}`);
 
@@ -232,6 +262,11 @@ async function loadConversation(conversationId) {
     const container = document.getElementById("chat-messages");
 
     container.innerHTML = "";
+    studySources = [];
+
+    activeSourceId = null;
+
+    renderStudySources();
 
     if (messages.length === 0) {
       container.innerHTML = `
@@ -257,7 +292,16 @@ async function loadConversation(conversationId) {
           "Flashcards generated",
           message.tool_id,
         );
+        return;
+      }
 
+      if (message.message_type === "mindmap") {
+        appendToolCard(
+          "mindmap",
+          message.tool_title,
+          "Mindmap generated",
+          message.tool_id,
+        );
         return;
       }
 
@@ -567,28 +611,12 @@ function handleTextareaKeydown(event) {
 ========================================================== */
 
 async function sendMessage() {
-  if (!currentConversationId) {
-    try {
-      const response = await fetch(
-        "/chatbot/new",
+  try {
+    await ensureConversation();
+  } catch (error) {
+    alert("Unable to create a conversation.");
 
-        {
-          method: "POST",
-        },
-      );
-
-      const data = await response.json();
-
-      currentConversationId = data.conversation_id;
-
-      await loadConversations();
-    } catch (error) {
-      console.error(error);
-
-      alert("Unable to create a conversation.");
-
-      return;
-    }
+    return;
   }
 
   const textarea = document.getElementById("chat-input");
@@ -754,7 +782,6 @@ function clearChatWindow() {
                     TOOL MODAL STATE
 ========================================================== */
 
-
 let selectedToolSourceId = null;
 
 /* ==========================================================
@@ -815,6 +842,34 @@ document.addEventListener(
 
     document
 
+      .getElementById("flashcards-history-btn")
+
+      .addEventListener(
+        "click",
+
+        () => {
+          closeToolModal("flashcards");
+
+          window.location.href = `/flashcards?conversation=${currentConversationId}`;
+        },
+      );
+
+    document
+
+      .getElementById("mindmap-history-btn")
+
+      .addEventListener(
+        "click",
+
+        () => {
+          closeToolModal("mindmap");
+
+          window.location.href = `/mindmap?conversation=${currentConversationId}`;
+        },
+      );
+
+    document
+
       .getElementById("flashcards-generate")
 
       .addEventListener(
@@ -834,7 +889,6 @@ document.addEventListener(
       );
   },
 );
-
 /* ==========================================================
                     OPEN MODAL
 ========================================================== */
@@ -905,7 +959,13 @@ function renderToolSourceList(tool) {
 
 async function generateFlashcards() {
   closeToolModal("flashcards");
+  try {
+    await ensureConversation();
+  } catch (error) {
+    appendAssistantMessage("⚠️ Unable to create a conversation.");
 
+    return;
+  }
   const source = studySources.find((item) => item.id === selectedToolSourceId);
 
   if (!source) {
@@ -997,12 +1057,89 @@ async function generateFlashcards() {
 
 async function generateMindmap() {
   closeToolModal("mindmap");
+  try {
+    await ensureConversation();
+  } catch (error) {
+    appendAssistantMessage("⚠️ Unable to create a conversation.");
 
-  appendAssistantMessage(
-    `🧠 Mindmap generation started.
+    return;
+  }
+  const source = studySources.find((item) => item.id === selectedToolSourceId);
 
-(Mindmap viewer will open after backend integration.)`,
+  if (!source) {
+    appendAssistantMessage("Please select a study source.");
+
+    return;
+  }
+
+  const loading = appendAssistantMessage(
+    `
+
+        <strong>🧠 Creating mindmap...</strong>
+
+        <br><br>
+
+        ⏳ Reading study material...
+
+        <br>
+
+        🌳 Building concept hierarchy...
+
+        `,
   );
+
+  scrollChatToBottom();
+
+  try {
+    activeSourceId = source.id;
+    const documentId = await uploadPendingSources();
+    source.documentId = documentId;
+    renderStudySources();
+
+    const response = await fetch(
+      "/mindmap/generate",
+
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          conversation_id: currentConversationId,
+          document_id: source.documentId,
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    loading.remove();
+
+    if (!data.success) {
+      appendAssistantMessage("⚠️ Unable to generate mindmap.");
+      return;
+    }
+
+    appendToolCard(
+      "mindmap",
+      data.mindmap.title,
+      "Mindmap generated",
+      data.mindmap.id,
+    );
+
+    scrollChatToBottom();
+  } catch (error) {
+    console.error(error);
+
+    loading.innerHTML = `
+
+        <strong>⚠️ Mindmap generation failed</strong>
+        <br><br>
+        Please try again in a few moments.
+        `;
+  }
 }
 
 // PART 5
@@ -1073,7 +1210,7 @@ function appendToolCard(tool, title, description, id = null) {
       if (tool === "flashcards") {
         window.location.href = `/flashcards?set=${id}&conversation=${currentConversationId}`;
       } else if (tool === "mindmap") {
-        window.location.href = "/mindmap";
+        window.location.href = `/mindmap?map=${id}&conversation=${currentConversationId}`;
       }
     },
   );
@@ -1114,7 +1251,7 @@ async function uploadPendingSources() {
   );
 
   const data = await response.json();
-
+  console.log(data);
   activeSource.uploaded = true;
 
   activeSource.documentId = data.document_id;
