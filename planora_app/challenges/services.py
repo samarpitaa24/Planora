@@ -1,5 +1,3 @@
-services.py
-
 import datetime
 import pytz
 
