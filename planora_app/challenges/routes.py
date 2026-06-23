@@ -1,5 +1,3 @@
-
-
 from flask import Blueprint, render_template, session, jsonify, request
 from planora_app.challenges.services import get_user_challenges, update_all_challenges
 from planora_app.extensions import get_db

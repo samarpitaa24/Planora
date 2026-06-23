@@ -36,8 +36,20 @@ document.addEventListener("DOMContentLoaded", function () {
   async function fetchLatest() {
     try {
       const res = await fetch("/notes/latest");
-      if (!res.ok) return;
-      const data = await res.json();
+
+    if (!res.ok) {
+      console.error("Failed to fetch latest note");
+      return;
+    }
+
+    let data = {};
+
+    try {
+      data = await res.json();
+    } catch (err) {
+      console.error("Invalid JSON response", err);
+      return;
+    }
       const n = data.latest_note;
       if (!n) {
         if (recentNoteEl) recentNoteEl.style.display = "none";

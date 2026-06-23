@@ -20,12 +20,29 @@ document.addEventListener("DOMContentLoaded", () => {
   // Fetch notes
   function fetchNotes(filterTypeValue = "", filterValue = "") {
     fetch(
-      `/notes/fetch?user_id=${USER_ID}&filter_type=${filterTypeValue}&filter_value=${filterValue}`,
+      `/notes/fetch?filter_type=${filterTypeValue}&filter_value=${filterValue}`,
     )
-      .then((res) => res.json())
+      .then(async (res) => {
+        let data = {};
+
+        try {
+          data = await res.json();
+        } catch (e) {}
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch notes");
+        }
+
+        return data;
+      })
+
       .then((data) => {
-        allNotes = data.notes;
+        allNotes = data.notes || [];
         renderNotes(allNotes);
+      })
+
+      .catch((err) => {
+        console.error(err);
       });
   }
 
@@ -102,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="note-meta">
             <span>${formatDateTimeIST(note.created_at)}</span>
-            ${note.starred ? '<span class="pinned-label">Pinned</span>' : ''}
+            ${note.starred ? '<span class="pinned-label">Pinned</span>' : ""}
           </div>
         </div>
         <div class="note-actions">
@@ -134,15 +151,33 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch("/notes/toggle_star", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ note_id: note._id, starred: newStar }),
+          body: JSON.stringify({
+            note_id: note._id,
+            starred: newStar,
+          }),
         })
-          .then((res) => res.json())
+          .then(async (res) => {
+            let data = {};
+
+            try {
+              data = await res.json();
+            } catch (e) {}
+
+            if (!res.ok) {
+              throw new Error(data.error || "Failed");
+            }
+
+            return data;
+          })
+
           .then((data) => {
             if (data.success) {
               note.starred = newStar;
               fetchNotes(filterType.value, getFilterValue());
             }
-          });
+          })
+
+          .catch(console.error);
       });
 
       const editButton = li.querySelector(".note-edit");
@@ -158,16 +193,33 @@ document.addEventListener("DOMContentLoaded", () => {
         fetch("/notes/delete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ note_id: note._id }),
+          body: JSON.stringify({
+            note_id: note._id,
+          }),
         })
-          .then((res) => res.json())
+          .then(async (res) => {
+            let data = {};
+
+            try {
+              data = await res.json();
+            } catch (e) {}
+
+            if (!res.ok) {
+              throw new Error(data.error || "Failed");
+            }
+
+            return data;
+          })
+
           .then((data) => {
             if (data.success) {
               fetchNotes(filterType.value, getFilterValue());
             } else {
               alert(data.error || "Failed to delete note.");
             }
-          });
+          })
+
+          .catch(console.error);
       });
 
       notesList.appendChild(li);
@@ -218,7 +270,20 @@ document.addEventListener("DOMContentLoaded", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        let data = {};
+
+        try {
+          data = await res.json();
+        } catch (e) {}
+
+        if (!res.ok) {
+          throw new Error(data.error || "Unable to save note.");
+        }
+
+        return data;
+      })
+
       .then((data) => {
         if (data.success) {
           closeNoteModalDialog();
@@ -226,7 +291,9 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           alert(data.error || "Unable to save note.");
         }
-      });
+      })
+
+      .catch(console.error);
   });
 
   applyFilter.addEventListener("click", () => {
