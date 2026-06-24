@@ -1,4 +1,5 @@
 
+
 import datetime
 import pytz
 
@@ -8,43 +9,22 @@ from planora_app.extensions import get_db
 IST = pytz.timezone("Asia/Kolkata")
 
 # Master list of challenges
-ALL_CHALLENGES = [
+CANONICAL_CHALLENGES = [
     {
-        "sequence": 1,
         "id": "ch1",
         "title": "5 Pomodoro Cycles",
         "badge_name": "Pomodoro Pro",
     },
     {
-        "sequence": 2,
         "id": "ch2",
         "title": "Study Neglected Subject",
         "badge_name": "Focus Finder",
     },
     {
-        "sequence": 3,
         "id": "ch3",
         "title": "3 Day Streak",
         "badge_name": "Streak Keeper",
     },
-    {
-        "sequence": 4,
-        "id": "ch4",
-        "title": "10 Pomodoro Cycles",
-        "badge_name": "Deep Worker",
-    },
-    {
-        "sequence": 5,
-        "id": "ch5",
-        "title": "5 Day Streak",
-        "badge_name": "Consistency Master",
-    },
-    {
-        "sequence": 6,
-        "id": "ch6",
-        "title": "Study 3 Different Subjects",
-        "badge_name": "Knowledge Explorer",
-    }
 ]
 
 
@@ -64,8 +44,6 @@ def to_datetime(d):
     return d
 
 
-
-
 # ✅ Ensures weekly challenges always exist
 def assign_challenges_for_week(db, user_id):
     today = get_current_ist_date()
@@ -75,11 +53,7 @@ def assign_challenges_for_week(db, user_id):
     print("User ID received:", user_id)
     print("User ID type:", type(user_id))
 
-    
-
-    print(f"Current Tier = {tier}")
-
-    for c in CHALLENGE_TIERS[tier]:
+    for c in CANONICAL_CHALLENGES:
         print(f"\nChecking challenge {c['id']} for user {user_id}")
 
         existing = coll.find_one(
@@ -329,137 +303,6 @@ def update_study_neglected(db, user_id):
     )
 
 
-# Complete 10 Pomodoro Sessions
-def update_10pomodoro(db, user_id):
-
-    coll = db["challenges"]
-
-    ch = coll.find_one(
-        {
-            "user_id": user_id,
-            "challenge_id": "ch4",
-        }
-    )
-
-    if not ch:
-        return
-
-    count = db.sessions.count_documents(
-        {
-            "user_id": user_id
-        }
-    )
-
-    progress = min(
-        int((count / 10) * 100),
-        100
-    )
-
-    status = (
-        "completed"
-        if count >= 10
-        else "in progress"
-    )
-
-    coll.update_one(
-        {"_id": ch["_id"]},
-        {
-            "$set": {
-                "progress": progress,
-                "status": status,
-                "last_updated": datetime.datetime.now(IST),
-            }
-        },
-    )
-
-# Maintain 5 Day Streak
-
-def update_5day_streak(db, user_id):
-
-    coll = db["challenges"]
-
-    ch = coll.find_one(
-        {
-            "user_id": user_id,
-            "challenge_id": "ch5",
-        }
-    )
-
-    if not ch:
-        return
-
-    streak = ch.get("streak_count", 0)
-
-    if streak >= 5:
-
-        coll.update_one(
-            {"_id": ch["_id"]},
-            {
-                "$set": {
-                    "status": "completed",
-                    "progress": 100
-                }
-            }
-        )
-
-# Study 3 Different Subjects
-
-def update_3subjects(db, user_id):
-
-    coll = db["challenges"]
-
-    ch = coll.find_one(
-        {
-            "user_id": user_id,
-            "challenge_id": "ch6",
-        }
-    )
-
-    if not ch:
-        return
-
-    pipeline = [
-        {
-            "$match": {
-                "user_id": user_id
-            }
-        },
-        {
-            "$group": {
-                "_id": "$subject"
-            }
-        }
-    ]
-
-    subjects = list(
-        db.sessions.aggregate(pipeline)
-    )
-
-    count = len(subjects)
-
-    progress = min(
-        int((count / 3) * 100),
-        100
-    )
-
-    status = (
-        "completed"
-        if count >= 3
-        else "in progress"
-    )
-
-    coll.update_one(
-        {"_id": ch["_id"]},
-        {
-            "$set": {
-                "progress": progress,
-                "status": status,
-                "last_updated": datetime.datetime.now(IST),
-            }
-        },
-    )
-
-
 # ✅ Master updater
 def update_all_challenges(db, user_id):
     print(
@@ -470,9 +313,6 @@ def update_all_challenges(db, user_id):
     update_3day_streak(db, user_id)
     update_5pomodoro(db, user_id)
     update_study_neglected(db, user_id)
-    update_10pomodoro(db, user_id)
-    update_5day_streak(db, user_id)
-    update_3subjects(db, user_id)
 
     print(
         f"✅ Finished updating all challenges for user {user_id}"
@@ -485,20 +325,10 @@ def get_user_challenges(db, user_id):
 
     coll = db["challenges"]
 
-    tier = get_current_tier(db, user_id)
-
-    active_ids = [
-        ch["id"]
-        for ch in CHALLENGE_TIERS[tier]
-    ]
-
     docs = list(
         coll.find(
-            {
-                "user_id": user_id,
-                "challenge_id": {"$in": active_ids}
-            },
-            {"_id": 0}
+            {"user_id": user_id},
+            {"_id": 0},
         )
     )
 
