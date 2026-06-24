@@ -54,6 +54,38 @@ def _set_login_session(user):
     session["username"] = user.get("username") or user.get("full_name") or user.get("name") or "User"
 
 
+def _log_auth_decision(provider, user_found, email, onboarding_completed, destination):
+    print("AUTH PROVIDER:", provider, flush=True)
+    print("USER FOUND:", user_found, flush=True)
+    print("USER EMAIL:", email, flush=True)
+    print("ONBOARDING STATUS:", onboarding_completed, flush=True)
+    print("REDIRECT DESTINATION:", destination, flush=True)
+
+
+def _redirect_existing_user(provider, user, email):
+    destination = "/dashboard"
+    _log_auth_decision(
+        provider,
+        True,
+        email,
+        user.get("onboarding_completed", False),
+        destination,
+    )
+    return redirect(url_for("dashboard.dashboard"))
+
+
+def _redirect_new_user(provider, user, email):
+    destination = "/onboarding"
+    _log_auth_decision(
+        provider,
+        False,
+        email,
+        user.get("onboarding_completed", False),
+        destination,
+    )
+    return redirect(url_for("onboarding.onboarding"))
+
+
 def _unique_username(db, base_username):
     cleaned = re.sub(r"[^a-zA-Z0-9_]", "", (base_username or "user").strip().lower()) or "user"
     username = cleaned[:30]
@@ -77,8 +109,8 @@ def _find_user_by_oauth_or_email(db, provider, oauth_id, email=None, allow_email
         print(f"DEBUG [_find_user_by_oauth_or_email] Found OAuth user: {user.get('_id')}, provider={user.get('oauth_provider')}", flush=True)
         return user
 
-    # Only fall back to email match if explicitly allowed
-    # For OAuth flows, we should NOT fall back to email to maintain proper provider tracking
+    # Fall back to email when the OAuth provider returns an email.
+    # This keeps onboarding state consistent for users who already exist.
     if allow_email_fallback and email:
         user = db.users.find_one({"email": {"$regex": f"^{re.escape(email)}$", "$options": "i"}})
         if user:
@@ -104,7 +136,7 @@ def _create_google_user(db, user_info):
         "created_at": datetime.utcnow(),
         "daily_quota": 10000,
         "tokens_used": 0,
-        "onboarding_completed": True,
+        "onboarding_completed": False,
     }
 
     result = db.users.insert_one(user_data)
@@ -141,7 +173,7 @@ def _create_github_user(db, profile, email):
         "created_at": datetime.utcnow(),
         "daily_quota": 10000,
         "tokens_used": 0,
-        "onboarding_completed": True,
+        "onboarding_completed": False,
     }
 
     result = db.users.insert_one(user_data)
@@ -167,12 +199,10 @@ def login():
             session['username'] = user.get('username', user.get('full_name', 'User'))
             flash('Login successful!', 'success')
 
-            # ✅ Check onboarding
-            if not user.get('onboarding_completed', False):
-                return redirect(url_for('onboarding.onboarding'))
-
-            return redirect(url_for('dashboard.dashboard'))
+            # Existing email/password users continue to the dashboard.
+            return _redirect_existing_user("Email", user, email)
         else:
+            _log_auth_decision("Email", False, email, None, "login_failed")
             flash('Invalid email or password', 'danger')
 
     return render_template('auth/login.html', email=email)
@@ -239,10 +269,12 @@ def signup():
             'onboarding_completed': False # ✅ New user should still go through onboarding
         }
 
-        db.users.insert_one(user_data)
+        result = db.users.insert_one(user_data)
+        user_data["_id"] = result.inserted_id
 
-        flash('Account created successfully! Please login.', 'success')
-        return redirect(url_for('auth.login'))
+        _set_login_session(user_data)
+        flash('Account created successfully! Please complete onboarding.', 'success')
+        return _redirect_new_user("Email", user_data, email)
 
     return render_template('auth/signup.html') # ✅ revert to correct template
 
@@ -274,17 +306,19 @@ def google_callback():
 
         email = user_info.get("email").lower()
         print(f"DEBUG [google_callback] Attempting to find/create user with email={email}", flush=True)
-        # For OAuth, do NOT fall back to email lookup - only create OAuth users with proper provider tracking
-        user = _find_user_by_oauth_or_email(db, "Google", user_info.get("sub"), email, allow_email_fallback=False)
+        user = _find_user_by_oauth_or_email(db, "Google", user_info.get("sub"), email, allow_email_fallback=True)
         print(f"DEBUG [google_callback] Found/retrieved user: {user.get('_id') if user else 'None'}, oauth_provider={user.get('oauth_provider') if user else 'N/A'}", flush=True)
 
-        if not user:
-            print(f"DEBUG [google_callback] Creating new Google user", flush=True)
-            user = _create_google_user(db, user_info)
+        if user:
+            _set_login_session(user)
+            flash("Logged in with Google successfully!", "success")
+            return _redirect_existing_user("Google", user, email)
 
+        print(f"DEBUG [google_callback] Creating new Google user", flush=True)
+        user = _create_google_user(db, user_info)
         _set_login_session(user)
-        flash("Logged in with Google successfully!", "success")
-        return redirect(url_for("dashboard.dashboard"))
+        flash("Logged in with Google successfully! Please complete onboarding.", "success")
+        return _redirect_new_user("Google", user, email)
     except Exception:
         flash("Google sign-in failed. Please try again.", "danger")
         return redirect(url_for("auth.login"))
@@ -316,17 +350,19 @@ def github_callback():
         email = profile.get("email")
         email = email.lower() if email else _get_github_email()
         print(f"DEBUG [github_callback] Attempting to find/create user with email={email}", flush=True)
-        # For OAuth, do NOT fall back to email lookup - only create OAuth users with proper provider tracking
-        user = _find_user_by_oauth_or_email(db, "GitHub", profile.get("id"), email, allow_email_fallback=False)
+        user = _find_user_by_oauth_or_email(db, "GitHub", profile.get("id"), email, allow_email_fallback=True)
         print(f"DEBUG [github_callback] Found/retrieved user: {user.get('_id') if user else 'None'}, oauth_provider={user.get('oauth_provider') if user else 'N/A'}", flush=True)
 
-        if not user:
-            print(f"DEBUG [github_callback] Creating new GitHub user", flush=True)
-            user = _create_github_user(db, profile, email)
+        if user:
+            _set_login_session(user)
+            flash("Logged in with GitHub successfully!", "success")
+            return _redirect_existing_user("GitHub", user, email)
 
+        print(f"DEBUG [github_callback] Creating new GitHub user", flush=True)
+        user = _create_github_user(db, profile, email)
         _set_login_session(user)
-        flash("Logged in with GitHub successfully!", "success")
-        return redirect(url_for("dashboard.dashboard"))
+        flash("Logged in with GitHub successfully! Please complete onboarding.", "success")
+        return _redirect_new_user("GitHub", user, email)
     except Exception:
         flash("GitHub sign-in failed. Please try again.", "danger")
         return redirect(url_for("auth.login"))
