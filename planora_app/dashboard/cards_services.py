@@ -5,6 +5,9 @@ import platform
 from bson import ObjectId
 from planora_app.extensions import get_db
 
+import pytz
+IST = pytz.timezone("Asia/Kolkata")
+
 # configuration
 BUCKET_MINUTES = 15                 # bucket granularity
 BUCKETS_PER_DAY = 24 * 60 // BUCKET_MINUTES  # 96
@@ -335,61 +338,118 @@ def get_priority_focus(user_id: str) -> dict:
 
 #streaks 
 
-def get_daily_streak(user_id: str) -> dict:
+def get_daily_streak(user_id: str):
     """
-    Calculates the daily streak for a user and days missed in current month.
-    Returns {"streak": X, "missed": Y, "message": "..."}
+    Lazy Daily Streak Update.
+
+    Updates streak only when:
+    - dashboard is opened
+    - today's streak has not already been updated
+    - user has at least one Completed or Partially Completed session today
+
+    Afterwards only returns stored values.
     """
+
     db = get_db()
+
     try:
-        user_obj = db.users.find_one({"_id": ObjectId(user_id)})
+        user = db.users.find_one(
+            {
+                "_id": ObjectId(user_id)
+            }
+        )
+
     except Exception:
-        return {"streak": 0, "missed": 0, "message": "Invalid user id"}
 
-    if not user_obj:
-        return {"streak": 0, "missed": 0, "message": "User not found"}
+        return {
+            "current_streak": 0,
+            "highest_streak": 0,
+            "message": "Invalid user"
+        }
 
-    join_date = user_obj.get("join_date")
-    if not join_date:
-        join_date = user_obj.get("created_at")  # fallback
-    if isinstance(join_date, str):
-        join_date = datetime.strptime(join_date, "%Y-%m-%d").date()
+    if not user:
+
+        return {
+            "current_streak": 0,
+            "highest_streak": 0,
+            "message": "User not found"
+        }
+
+    current_streak = user.get("current_streak", 0)
+    highest_streak = user.get("highest_streak", 0)
+    last_update = user.get("last_streak_update")
+
+    today = datetime.now(IST).date()
+    today_str = today.strftime("%Y-%m-%d")
+
+    # Already updated today
+    if last_update == today_str:
+
+        return {
+            "current_streak": current_streak,
+            "highest_streak": highest_streak,
+            "message": f"🔥 {current_streak} day streak!"
+        }
+
+    # Check if user studied today
+    session = db.sessions.find_one(
+        {
+            "user_id": user_id,
+            "date": today_str,
+            "completion_status": {
+                "$in": [
+                    "Completed",
+                    "Partially Completed"
+                ]
+            }
+        }
+    )
+
+    # No qualifying session today
+    if not session:
+
+        return {
+            "current_streak": current_streak,
+            "highest_streak": highest_streak,
+            "message": "Complete a study session today!"
+        }
+
+    yesterday = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    if last_update == yesterday:
+
+        current_streak += 1
+
     else:
-        join_date = join_date.date()  # if stored as datetime
 
-    today = datetime.utcnow().date()
-    start_month = max(join_date, today.replace(day=1))
+        current_streak = 1
 
-    # Fetch all completed sessions in current month
-    sessions_cursor = db.sessions.find({
-        "user_id": user_id,
-        "date": {"$gte": start_month.strftime("%Y-%m-%d"), "$lte": today.strftime("%Y-%m-%d")},
-        "completion_status": "Completed"  # <-- only completed sessions
-    })
-    sessions = list(sessions_cursor)
+    if current_streak > highest_streak:
 
-    # Build set of days user studied (date objects)
-    studied_days = set()
-    for s in sessions:
-        date_str = s.get("date")
-        if not date_str:
-            continue
-        try:
-            studied_days.add(datetime.strptime(date_str, "%Y-%m-%d").date())
-        except ValueError:
-            continue
+        highest_streak = current_streak
 
-    # Daily streak: consecutive days ending today
-    streak = 0
-    day_check = today
-    while day_check in studied_days:
-        streak += 1
-        day_check -= timedelta(days=1)
+    db.users.update_one(
 
-    # Days missed: total days from start_month to today minus studied_days
-    total_days = (today - start_month).days + 1
-    missed = total_days - len(studied_days)
+        {
+            "_id": ObjectId(user_id)
+        },
 
-    message = f"You've studied {streak} day{'s' if streak != 1 else ''} in a row! Keep it going!"
+        {
+            "$set": {
 
-    return {"streak": streak, "missed": missed, "message": message}
+                "current_streak": current_streak,
+                "highest_streak": highest_streak,
+                "last_streak_update": today_str
+
+            }
+        }
+
+    )
+
+    return {
+
+        "current_streak": current_streak,
+        "highest_streak": highest_streak,
+        "message": f"🔥 {current_streak} day streak!"
+
+    }

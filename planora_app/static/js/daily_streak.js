@@ -1,34 +1,43 @@
 document.addEventListener("DOMContentLoaded", async () => {
+
     const streakEl = document.getElementById("daily-streak-count");
-    const missedEl = document.getElementById("daily-streak-missed");
+    const highestEl = document.getElementById("daily-streak-missed");
     const msgEl = document.getElementById("daily-streak-msg");
 
-    // For now, fallback user_id from URL or hardcoded
-    const urlParams = new URLSearchParams(window.location.search);
-    const userId = urlParams.get("user_id") || "68dc37187ffd67372e424594";
-
     try {
-        const res = await fetch(`/cards/daily-streak?user_id=${userId}`);
-        const data = await res.json();
 
-        if (res.ok) {
-            const streak = data.streak || 0;
-            const missed = data.missed || 0;
-            const msg = data.message || "";
+        const res = await fetch("/cards/daily-streak");
 
-            // ✅ Handle pluralization
-            streakEl.textContent = `${streak} ${streak === 1 ? "day" : "days"}`;
-            missedEl.textContent = missed;
-            msgEl.textContent = msg;
-        } else {
-            streakEl.textContent = "0 days";
-            missedEl.textContent = 0;
-            msgEl.textContent = "Error fetching streak";
+        let data = {};
+
+        try {
+            data = await res.json();
+        } catch (e) {}
+
+        if (!res.ok) {
+            throw new Error(data.error || "Failed to fetch streak");
         }
+
+        const currentStreak = data.current_streak || 0;
+        const highestStreak = data.highest_streak || 0;
+        const message = data.message || "";
+
+        streakEl.textContent =
+            `${currentStreak} ${currentStreak === 1 ? "day" : "days"}`;
+
+        highestEl.textContent =
+            `${highestStreak} ${highestStreak === 1 ? "day" : "days"}`;
+
+        msgEl.textContent = message;
+
     } catch (err) {
+
         console.error(err);
+
         streakEl.textContent = "0 days";
-        missedEl.textContent = 0;
-        msgEl.textContent = "Error fetching streak";
+        highestEl.textContent = "0 days";
+        msgEl.textContent = "Unable to load streak";
+
     }
+
 });
