@@ -1,10 +1,6 @@
-
-
 import datetime
 import pytz
-
 from planora_app.dashboard.cards_services import get_priority_focus
-from planora_app.extensions import get_db
 
 IST = pytz.timezone("Asia/Kolkata")
 
@@ -49,12 +45,7 @@ def assign_challenges_for_week(db, user_id):
     today = get_current_ist_date()
     coll = db["challenges"]
 
-    print("\n========== CHALLENGE FUNCTION STARTED ==========")
-    print("User ID received:", user_id)
-    print("User ID type:", type(user_id))
-
     for c in CANONICAL_CHALLENGES:
-        print(f"\nChecking challenge {c['id']} for user {user_id}")
 
         existing = coll.find_one(
             {
@@ -64,7 +55,6 @@ def assign_challenges_for_week(db, user_id):
         )
 
         if existing:
-            print(f"Challenge {c['id']} already exists.")
             continue
 
         expected_subject = None
@@ -76,11 +66,7 @@ def assign_challenges_for_week(db, user_id):
                 if pf and isinstance(pf, dict):
                     expected_subject = pf.get("subject")
 
-            except Exception as e:
-                print(
-                    f"[assign_challenges_for_week] Could not get priority focus: {e}"
-                )
-
+            except Exception:
                 # Set a default subject if priority focus fails
                 expected_subject = "Not Set"
 
@@ -98,13 +84,7 @@ def assign_challenges_for_week(db, user_id):
             "last_updated": datetime.datetime.now(IST),
         }
 
-        print("Inserting challenge:", doc)
-
         coll.insert_one(doc)
-
-        print(
-            f"✅ Inserted challenge: {c['title']} for user {user_id}"
-        )
 
     return True
 
@@ -157,9 +137,6 @@ def update_3day_streak(db, user_id):
             },
         )
 
-        print(
-            f"✅ Updated streak: {streak_count}/3 days for user {user_id}"
-        )
 
 
 # ✅ Update Pomodoro challenge
@@ -190,15 +167,7 @@ def update_5pomodoro(db, user_id):
             }
         )
 
-        print(
-            f"📊 Found {count} pomodoro sessions for user {user_id}"
-        )
-
-    except Exception as e:
-        print(
-            f"[update_5pomodoro] Error querying sessions: {e}"
-        )
-
+    except Exception:
         count = 0
 
     progress = min(int((count / 5) * 100), 100)
@@ -224,11 +193,6 @@ def update_5pomodoro(db, user_id):
         },
     )
 
-    print(
-        f"✅ Updated Pomodoro challenge: "
-        f"{count}/5 sessions, {progress}% complete"
-    )
-
 
 # ✅ Update Neglected Subject challenge
 def update_study_neglected(db, user_id):
@@ -252,9 +216,6 @@ def update_study_neglected(db, user_id):
     subject = ch.get("expected_subject")
 
     if not subject:
-        print(
-            "⚠️ No expected subject set for neglected subject challenge"
-        )
         return
 
     try:
@@ -267,16 +228,8 @@ def update_study_neglected(db, user_id):
             }
         )
 
-        print(
-            f"📊 Found {count} sessions for subject "
-            f"'{subject}' for user {user_id}"
-        )
 
-    except Exception as e:
-        print(
-            f"[update_study_neglected] Error querying sessions: {e}"
-        )
-
+    except Exception:
         count = 0
 
     status = (
@@ -298,25 +251,15 @@ def update_study_neglected(db, user_id):
         },
     )
 
-    print(
-        f"✅ Updated Neglected Subject challenge: {status}"
-    )
-
 
 # ✅ Master updater
 def update_all_challenges(db, user_id):
-    print(
-        f"🔄 Updating all challenges for user {user_id}"
-    )
 
     assign_challenges_for_week(db, user_id)
     update_3day_streak(db, user_id)
     update_5pomodoro(db, user_id)
     update_study_neglected(db, user_id)
 
-    print(
-        f"✅ Finished updating all challenges for user {user_id}"
-    )
 
 
 # ✅ API data fetcher
@@ -345,9 +288,5 @@ def get_user_challenges(db, user_id):
                     (datetime.date, datetime.datetime),
                 ):
                     doc[field] = doc[field].isoformat()
-
-    print(
-        f"📤 Returning {len(docs)} challenges for user {user_id}"
-    )
 
     return docs
