@@ -124,6 +124,22 @@
             <div class="timer-status" id="floatingTimerStatus">Focus Time</div>
         </div>
     </div>
+    <!-- GLOBAL POMODORO MODAL - Shows on all pages when timer completes -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/timer.css') }}">
+    <div id="globalPomodoroModal" class="modal">
+        <div class="modal-content">
+            <h3 id="globalModalTitle">Focus Cycle Completed!</h3>
+            <p id="globalModalMessage">Great job! Time for a break.</p>
+            <div class="modal-buttons">
+                <button id="globalModalBtn1" class="btn-primary" style="display: inline-block;">Start Break</button>
+                <button id="globalModalBtn2" class="btn-secondary" style="display: inline-block;">Skip Break</button>
+            </div>
+        </div>
+    </div>
+    <!-- Global Audio Element for Pomodoro Timer Alarm (available on all pages) -->
+    <audio id="alarmSound" preload="auto">
+      <source src="{{ url_for('static', filename='sounds/timeraudio.mp3') }}" type="audio/mpeg">
+    </audio>
 
     <!-- JavaScript Files -->
     <!-- Load timer.js FIRST on ALL pages to ensure background timer runs -->
