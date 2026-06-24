@@ -35,6 +35,9 @@ def create_app():
     from planora_app.preferences.preferences_routes import preferences_bp
     app.register_blueprint(preferences_bp)
     
+    from planora_app.settings.routes import settings_bp
+    app.register_blueprint(settings_bp)
+    
     # Import and register auth blueprint
     from planora_app.auth.routes import auth, init_oauth
     init_oauth(app)

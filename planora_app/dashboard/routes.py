@@ -18,6 +18,10 @@ def dashboard():
 
     user = db.users.find_one({'_id': ObjectId(session['user_id'])})
 
+    if not user:
+        session.clear()
+        return redirect(url_for('auth.login'))
+
     if not user.get('onboarding_completed', False):
         return redirect(url_for('onboarding.onboarding'))
 

@@ -34,14 +34,25 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('auth.login') }}" class="auth-form" novalidate>
+          <!-- Hidden dummy input to capture aggressive browser username autofill -->
+          <input
+            type="text"
+            name="username"
+            autocomplete="username"
+            style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;"
+            tabindex="-1"
+            aria-hidden="true"
+          />
+
           <div class="form-group">
             <label for="email">Email Address</label>
             <input
               type="email"
               id="email"
               name="email"
+              value="{{ email or '' }}"
               required
-              placeholder="you@example.com"
+              placeholder="Enter your email"
               autocomplete="email"
             />
           </div>
@@ -63,7 +74,7 @@
               <input type="checkbox" name="remember" />
               Remember me
             </label>
-        
+            <a href="{{ url_for('auth.forgot_password') }}" class="forgot-password">
               Forgot password?
             </a>
           </div>

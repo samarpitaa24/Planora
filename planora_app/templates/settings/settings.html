@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Planora{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+  <h1 class="settings-title">Settings</h1>
+
+  <div class="settings-grid">
+    
+    <!-- SECTION 1 — PROFILE INFORMATION -->
+    <div class="settings-card profile-card">
+      <div class="settings-card-header">
+        <h2>👤 Profile Information</h2>
+      </div>
+      <div class="settings-card-body">
+        
+        <!-- Profile Picture Actions -->
+        <div class="avatar-section">
+          <div class="avatar-circle-wrapper" onclick="document.getElementById('avatar-input').click();" title="Click to upload a new profile picture">
+            {% if user.profile_picture %}
+              <img id="avatar-preview-img" src="{{ user.profile_picture }}" alt="Profile Picture" class="avatar-image">
+            {% else %}
+              <div id="avatar-preview-placeholder" class="avatar-placeholder">
+                {{ (user.full_name or user.username or 'U')[0] | upper }}
+              </div>
+            {% endif %}
+            <div class="avatar-overlay">Change<br>Photo</div>
+          </div>
+          
+          <div class="avatar-actions-container">
+            <div class="avatar-actions-row">
+              <input type="file" id="avatar-input" accept=".jpg,.jpeg,.png" style="display: none;">
+              <button type="button" class="settings-btn settings-btn-secondary" onclick="document.getElementById('avatar-input').click();">Upload Photo</button>
+              {% if user.profile_picture %}
+                <button type="button" id="remove-avatar-btn" class="settings-btn settings-btn-ghost-danger">Remove</button>
+              {% else %}
+                <button type="button" id="remove-avatar-btn" class="settings-btn settings-btn-ghost-danger" style="display: none;">Remove</button>
+              {% endif %}
+            </div>
+            <span class="avatar-specs">Supported formats: JPG, PNG. Max size: 2 MB.</span>
+          </div>
+        </div>
+
+        <!-- Profile Details Form -->
+        <form id="profile-details-form">
+          <div class="settings-form-group profile-name-group">
+            <label for="full_name">Full Name</label>
+            <input type="text" id="full_name" name="full_name" class="settings-input" value="{{ user.full_name or '' }}" required>
+          </div>
+          
+          <div class="settings-form-group profile-username-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" class="settings-input" value="{{ user.username or '' }}" required>
+          </div>
+          
+          <div class="settings-form-group profile-email-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" class="settings-input" value="{{ user.email or '' }}" disabled>
+          </div>
+
+          <div class="settings-form-group profile-meta-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;">
+            <div>
+              <label>Account Type</label>
+              <div style="font-weight: 700; font-size: 14px; padding: 6px 0; display: flex; align-items: center; gap: 6px;">
+                {% if user.oauth_provider %}
+                  🌐 {{ user.oauth_provider }} Linked
+                {% else %}
+                  📧 Email & Password
+                {% endif %}
+              </div>
+            </div>
+            <div>
+              <label>Member Since</label>
+              <div style="font-weight: 700; font-size: 14px; padding: 6px 0; color: var(--muted);">
+                📅 {{ member_since }}
+              </div>
+            </div>
+          </div>
+
+          <div id="profile-alert" class="settings-alert"></div>
+
+          <div class="profile-actions" style="margin-top: 24px;">
+            <button type="submit" class="settings-btn settings-btn-primary">Save Profile Info</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SECTION 2 — STREAK & PROGRESS -->
+    <div class="settings-card progress-card">
+      <div class="settings-card-header">
+        <h2>🔥 Streak & Progress</h2>
+      </div>
+      <div class="settings-card-body">
+        <div class="stats-cards-grid">
+          
+          <div class="stat-metric-card">
+            <div class="stat-metric-icon">🔥</div>
+            <div class="stat-metric-info">
+              <span class="stat-metric-value">{{ stats.current_streak }}</span>
+              <span class="stat-metric-label">Current Streak</span>
+            </div>
+          </div>
+          
+          <div class="stat-metric-card">
+            <div class="stat-metric-icon">🏆</div>
+            <div class="stat-metric-info">
+              <span class="stat-metric-value">{{ stats.longest_streak }}</span>
+              <span class="stat-metric-label">Longest Streak</span>
+            </div>
+          </div>
+          
+          <div class="stat-metric-card">
+            <div class="stat-metric-icon">📅</div>
+            <div class="stat-metric-info">
+              <span class="stat-metric-value">{{ stats.total_study_days }}</span>
+              <span class="stat-metric-label">Total Study Days</span>
+            </div>
+          </div>
+          
+          <div class="stat-metric-card">
+            <div class="stat-metric-icon">⏱️</div>
+            <div class="stat-metric-info">
+              <span class="stat-metric-value">{{ stats.total_study_hours }}h</span>
+              <span class="stat-metric-label">Total Study Hours</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 3 — SECURITY & SECTION 4 — CONNECTED ACCOUNTS -->
+    <div class="settings-card security-card">
+      <div class="settings-card-header">
+        <h2>🔒 Security & Connected Accounts</h2>
+      </div>
+      <div class="settings-card-body" style="display: flex; flex-direction: column; gap: 24px;">
+        
+        <!-- Password changing / display -->
+        <div>
+          <h3 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 700;">Password Security</h3>
+          {% if connected.is_email %}
+            <form id="change-password-form">
+              <div class="settings-form-group">
+                <label for="current_password">Current Password</label>
+                <input type="password" id="current_password" name="current_password" class="settings-input" required>
+              </div>
+              <div class="settings-form-group">
+                <label for="new_password">New Password</label>
+                <input type="password" id="new_password" name="new_password" class="settings-input" required>
+              </div>
+              <div class="settings-form-group">
+                <label for="confirm_password">Confirm New Password</label>
+                <input type="password" id="confirm_password" name="confirm_password" class="settings-input" required>
+              </div>
+              
+              <div id="password-alert" class="settings-alert"></div>
+              
+              <div style="margin-top: 14px;">
+                <button type="submit" class="settings-btn settings-btn-primary">Update Password</button>
+              </div>
+            </form>
+          {% elif connected.is_google %}
+            <div class="oauth-managed-banner">
+              <span>🔑 Password managed by Google.</span>
+            </div>
+          {% elif connected.is_github %}
+            <div class="oauth-managed-banner">
+              <span>🔑 Password managed by GitHub.</span>
+            </div>
+          {% endif %}
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 0;">
+
+        <!-- Connected OAuth provider lists -->
+        <div>
+          <h3 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 700;">Auth Connections</h3>
+          <div class="connected-accounts-list">
+            
+            <div class="connected-account-item">
+              <div class="account-provider-info">
+                <span class="provider-icon">📧</span>
+                <span>Email Account</span>
+              </div>
+              <div>
+                {% if connected.is_email %}
+                  <span class="badge-connected">✓ Linked</span>
+                {% else %}
+                  <span class="badge-disconnected">Not Linked</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="connected-account-item">
+              <div class="account-provider-info">
+                <span class="provider-icon">🌐</span>
+                <span>Google Connected</span>
+              </div>
+              <div>
+                {% if connected.is_google %}
+                  <span class="badge-connected">✓ Linked</span>
+                {% else %}
+                  <span class="badge-disconnected">Not Linked</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="connected-account-item">
+              <div class="account-provider-info">
+                <span class="provider-icon">🐙</span>
+                <span>GitHub Connected</span>
+              </div>
+              <div>
+                {% if connected.is_github %}
+                  <span class="badge-connected">✓ Linked</span>
+                {% else %}
+                  <span class="badge-disconnected">Not Linked</span>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SECTION 5 — ACCOUNT ACTIONS (Bottom Full Width) -->
+    <div class="settings-card full-width-card">
+      <div class="settings-card-header">
+        <h2>🚪 Account Actions</h2>
+      </div>
+      <div class="settings-card-body actions-card-body">
+        <a href="{{ url_for('auth.logout') }}" class="settings-btn settings-btn-danger">Logout</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

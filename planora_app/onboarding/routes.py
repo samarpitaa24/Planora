@@ -16,6 +16,11 @@ def onboarding():
 
     user = db.users.find_one({'_id': ObjectId(session['user_id'])})
 
+    if not user:
+        session.clear()
+        flash('Invalid session. Please login again.', 'danger')
+        return redirect(url_for('auth.login'))
+
     if user.get('onboarding_completed', False):
         return redirect(url_for('dashboard.dashboard'))
 
