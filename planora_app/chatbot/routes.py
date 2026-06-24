@@ -80,6 +80,11 @@ def send_message():
             "error": "Missing data"
         }), 400
 
+    if not ObjectId.is_valid(conversation_id):
+        return jsonify({
+            "error": "Invalid conversation ID format"
+        }), 400
+
     db = get_db()
 
     conversation = db.chat_conversations.find_one({

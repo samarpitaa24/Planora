@@ -9,10 +9,15 @@ import json
 
 
 def generate_flashcards(document_id, card_count):
+    if not document_id or not ObjectId.is_valid(document_id):
+        return None
     db = get_db()
-    document = db.chat_documents.find_one({
-        "_id": ObjectId(document_id)
-    })
+    try:
+        document = db.chat_documents.find_one({
+            "_id": ObjectId(document_id)
+        })
+    except Exception:
+        return None
 
     if not document:
         return []
@@ -107,11 +112,15 @@ def get_flashcard_sets():
     return result
 
 def get_flashcard_set(set_id):
-
+    if not set_id or not ObjectId.is_valid(set_id):
+        return None
     db = get_db()
-    flashcards = db.flashcards.find_one({
-        "_id": ObjectId(set_id)
-    })
+    try:
+        flashcards = db.flashcards.find_one({
+            "_id": ObjectId(set_id)
+        })
+    except Exception:
+        return None
 
     if not flashcards:
         return None
@@ -121,11 +130,14 @@ def get_flashcard_set(set_id):
     return flashcards
 
 def delete_flashcard_set(set_id):
-
+    if not set_id or not ObjectId.is_valid(set_id):
+        return False
     db = get_db()
-
-    db.flashcards.delete_one({
-        "_id": ObjectId(set_id)
-    })
+    try:
+        db.flashcards.delete_one({
+            "_id": ObjectId(set_id)
+        })
+    except Exception:
+        return False
 
     return True

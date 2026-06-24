@@ -8,8 +8,13 @@ from planora_app.ai.gemini import generate_response
 
 
 def generate_mindmap(document_id):
+    if not document_id or not ObjectId.is_valid(document_id):
+        return None
     db = get_db()
-    document = db.chat_documents.find_one({"_id": ObjectId(document_id)})
+    try:
+        document = db.chat_documents.find_one({"_id": ObjectId(document_id)})
+    except Exception:
+        return None
     if not document:
         return None
 
@@ -131,8 +136,13 @@ def get_mindmaps():
 
 
 def get_mindmap(map_id):
+    if not map_id or not ObjectId.is_valid(map_id):
+        return None
     db = get_db()
-    mindmap = db.mindmaps.find_one({"_id": ObjectId(map_id)})
+    try:
+        mindmap = db.mindmaps.find_one({"_id": ObjectId(map_id)})
+    except Exception:
+        return None
     if not mindmap:
         return None
     mindmap["_id"] = str(mindmap["_id"])
@@ -140,8 +150,13 @@ def get_mindmap(map_id):
 
 
 def delete_mindmap(map_id):
+    if not map_id or not ObjectId.is_valid(map_id):
+        return False
     db = get_db()
-    db.mindmaps.delete_one({"_id": ObjectId(map_id)})
+    try:
+        db.mindmaps.delete_one({"_id": ObjectId(map_id)})
+    except Exception:
+        return False
     return True
 
 # prompt = f"""

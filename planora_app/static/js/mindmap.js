@@ -12,8 +12,10 @@ document.addEventListener(
 
     const backButton = document.getElementById("back-to-chat");
 
-    if (backButton && CONVERSATION_ID) {
+    if (backButton && CONVERSATION_ID && CONVERSATION_ID !== "None" && CONVERSATION_ID !== "null") {
       backButton.href = `/chatbot/?conversation=${CONVERSATION_ID}`;
+    } else if (backButton) {
+      backButton.href = `/chatbot`;
     }
 
     loadMindmapHistory();
@@ -34,6 +36,9 @@ async function loadMindmapHistory() {
   }
 
   let mapId = SELECTED_MAP;
+  if (mapId === "None" || mapId === "null") {
+    mapId = null;
+  }
 
   if (!mapId) {
     mapId = mindmaps[0].id;

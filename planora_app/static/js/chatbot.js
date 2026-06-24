@@ -30,7 +30,7 @@ function initializeChatbot() {
   const conversationId = params.get("conversation");
 
   loadConversations().then(() => {
-    if (conversationId) {
+    if (conversationId && conversationId !== "null" && conversationId !== "None") {
       currentConversationId = conversationId;
 
       loadConversation(conversationId);
@@ -83,7 +83,7 @@ async function createConversation() {
 ========================================================== */
 
 async function ensureConversation() {
-  if (currentConversationId) {
+  if (currentConversationId && currentConversationId !== "null" && currentConversationId !== "None") {
     return currentConversationId;
   }
 
@@ -208,6 +208,7 @@ async function loadConversations() {
 
           if (currentConversationId === conversation.id) {
             currentConversationId = null;
+            window.history.replaceState({}, "", "/chatbot");
           }
 
           await loadConversations();
