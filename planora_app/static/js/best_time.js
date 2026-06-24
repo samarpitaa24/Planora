@@ -1,23 +1,44 @@
 async function fetchBestTime() {
-    // Get user_id from session (or URL fallback for testing)
-    const urlParams = new URLSearchParams(window.location.search);
-    const userIdFromUrl = urlParams.get("user_id");  
 
-    // Call backend; backend already handles session/fallback
     try {
-        const res = await fetch(`/cards/best-time${userIdFromUrl ? `?user_id=${userIdFromUrl}` : ""}`);
+
+        const res = await fetch("/cards/best-time");
         const data = await res.json();
 
-        if (res.ok && data.best_time) {
-            document.getElementById("peak-focus-time").textContent = data.best_time;
+        const bestTimeEl =
+            document.getElementById("peak-focus-time");
+
+        const subtitleEl =
+            document.getElementById("best-time-subtitle");
+
+        bestTimeEl.textContent = data.best_time;
+
+        if (data.source === "preference") {
+
+            subtitleEl.textContent =
+                "Based on your onboarding preference";
+
         } else {
-            console.error("Failed to fetch best time:", data.error);
-            document.getElementById("peak-focus-time").textContent = "Error fetching time";
+
+            subtitleEl.textContent =
+                "Based on your recent study sessions";
         }
+
     } catch (err) {
-        console.error("Error fetching best time:", err);
-        document.getElementById("peak-focus-time").textContent = "Error fetching time";
+
+        console.error(err);
+
+        document.getElementById(
+            "peak-focus-time"
+        ).textContent = "Error";
+
+        document.getElementById(
+            "best-time-subtitle"
+        ).textContent = "Could not load data";
     }
 }
 
-window.addEventListener("DOMContentLoaded", fetchBestTime);
+window.addEventListener(
+    "DOMContentLoaded",
+    fetchBestTime
+);

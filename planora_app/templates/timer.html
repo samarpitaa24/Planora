@@ -111,7 +111,7 @@
       {% if latest_note %}
       <div class="recent-note" id="recentNote">
         <p><strong>Recent Note:</strong> <span id="recentNoteText">{{ latest_note.text }}</span></p>
-        <small id="recentNoteTime">{{ latest_note.created_at.strftime("%Y-%m-%d %H:%M") }}</small>
+        <small id="recentNoteTime">{{ latest_note.created_at_display_time or latest_note.created_at.strftime("%Y-%m-%d %H:%M") }}</small>
       </div>
       {% else %}
       <div class="recent-note" id="recentNote" style="display:none;">

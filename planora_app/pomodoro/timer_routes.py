@@ -3,6 +3,7 @@ from planora_app.extensions import get_db
 from planora_app.pomodoro.timer_services import TimerService
 from bson import ObjectId
 from datetime import datetime
+import pytz
 
 timer_bp = Blueprint('timer', __name__, url_prefix='/timer')
 
@@ -33,6 +34,11 @@ def timer_page():
             {"user_id": str(user_id)},
             sort=[("created_at", -1)]
         )
+        
+        # Convert latest note created_at to IST display string if available
+        if latest_note and latest_note.get("created_at"):
+            ist = pytz.timezone('Asia/Kolkata')
+            latest_note["created_at_display_time"] = latest_note["created_at"].astimezone(ist).strftime("%Y-%m-%d %H:%M IST")
         
         return render_template('timer.html', 
                              subjects=subjects, 

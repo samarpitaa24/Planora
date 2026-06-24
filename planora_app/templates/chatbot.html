@@ -1,0 +1,157 @@
+{% extends "base.html" %} {% block title %} Study Assistant {% endblock %} {%
+block content %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/chatbot.css') }}"
+/>
+
+<div class="chatbot-page">
+  <!-- ================= Main ================= -->
+
+  <main class="chat-main">
+    <!-- Study Sources -->
+
+    <section class="study-sources">
+      <div class="study-source-header">
+        <h3>Study Sources</h3>
+        <p class="study-source-note">
+        Text-based PDF files only • Max 10 MB
+      </p>
+
+        <button id="add-pdf-btn" class="add-pdf-btn">+ Add PDF</button>
+      </div>
+
+      <div id="study-source-list" class="study-source-list"></div>
+
+      <input id="pdf-upload" type="file" accept=".pdf" hidden />
+    </section>
+
+    <!-- Chat Messages -->
+
+    <section id="chat-messages" class="chat-messages">
+      <div class="assistant-message">
+        👋 Hello!
+
+        <br /><br />
+
+        Upload a study source and ask anything.
+
+        <br />
+
+        Generate flashcards and mindmaps from your study material with AI.
+      </div>
+    </section>
+
+    <!-- AI Actions -->
+
+    <section class="chat-actions">
+      <button id="flashcards-btn" class="action-btn" type="button">
+        📚 Flashcards
+      </button>
+
+      <button id="mindmap-btn" class="action-btn" type="button">
+        🧠 Mindmap
+      </button>
+    </section>
+
+    <!-- Chat Input -->
+
+    <section class="chat-input-wrapper">
+      <div class="chat-input-area">
+        <textarea
+          id="chat-input"
+          rows="1"
+          placeholder="Ask anything about your studies..."
+          autocomplete="off"
+        ></textarea>
+
+        <button id="send-btn" class="send-btn" type="button">↑</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= Chat History ================= -->
+
+  <aside class="chat-sidebar">
+    <button id="new-chat-btn" class="new-chat-btn">+ New Chat</button>
+
+    <div id="chat-history" class="chat-history"></div>
+  </aside>
+</div>
+
+<!-- ================= Flashcards Modal ================= -->
+
+<div id="flashcards-modal" class="tool-modal hidden">
+  <div class="tool-modal-content">
+    <h3>Generate Flashcards</h3>
+
+    <p>Choose the study source.</p>
+
+    <div id="flashcards-source-list" class="tool-source-list"></div>
+
+    <div class="tool-modal-buttons">
+      <button
+        id="flashcards-history-btn"
+        class="history-btn"
+      >
+        View History
+      </button>
+
+      <button
+        id="flashcards-cancel"
+        class="secondary-btn"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="flashcards-generate"
+        class="primary-btn"
+      >
+        Generate
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= Mindmap Modal ================= -->
+
+<div id="mindmap-modal" class="tool-modal hidden">
+  <div class="tool-modal-content">
+    <h3>Generate Mindmap</h3>
+
+    <p>Choose the study source.</p>
+
+    <div id="mindmap-source-list" class="tool-source-list"></div>
+
+    <div class="tool-modal-buttons">
+      <button
+        id="mindmap-history-btn"
+        class="history-btn"
+      >
+        View History
+      </button>
+
+      <button
+        id="mindmap-cancel"
+        class="secondary-btn"
+      >
+        Cancel
+      </button>
+
+      <button
+        id="mindmap-generate"
+        class="primary-btn"
+      >
+        Generate
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+
+{% endblock %}
